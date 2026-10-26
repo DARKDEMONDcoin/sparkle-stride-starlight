@@ -36,7 +36,7 @@ export const generateDraftCopy = createServerFn({ method: "POST" }).middleware([
     const countText = platform === "meta" ? `${rule.min}-${rule.max} genuinely distinct creative concepts IN TOTAL across markets (different persona, angle, offer or hook each; Advantage+ needs variety)` : "2-4 genuinely distinct creative concepts PER market";
     const user = `Plan: ${JSON.stringify(draft.spec)}\nWrite ${countText}, natively in that market's language (not translated). ${limits} No guarantees or unsubstantiated claims; ground every line in the profile's USP/proof. Return JSON {"creatives":[{"market","language","concept","hypothesis","persona","angle","offer","hook","headlines":[],"longHeadlines":[],"descriptions":[],"primary":[],"cta"}]}.`;
     const { freeChat, parseJson } = await import("@/lib/nour-research.server");
-    const raw = await freeChat("media-buyer-creative", [{ role: "system", content: system }, { role: "user", content: user }], { json: true, maxTokens: 5000, timeoutMs: 45000, budgetMs: 55000, attempts: 2 });
+    const raw = await freeChat("media-buyer-creative", [{ role: "system", content: system }, { role: "user", content: user }], { json: true, maxTokens: 9000, timeoutMs: 45000, budgetMs: 55000, attempts: 2 });
     const parsed = out.safeParse(parseJson(raw));
     if (!parsed.success || parsed.data.creatives.length < (platform === "meta" ? rule.min : 1)) throw new Error("تعذّر توليد عدد كافٍ من المفاهيم المميزة؛ حاول مرة أخرى.");
     const creatives: DraftCreative[] = parsed.data.creatives.map((c) => ({ ...c, cta: c.cta ?? null, id: crypto.randomUUID(), issues: platform === "google" && gType !== "search" ? validateGoogleVisualCopy(gType, c) : validateCopy(platform, c), status: "pending", aiGenerated: true }));
