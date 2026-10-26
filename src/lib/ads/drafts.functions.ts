@@ -3,14 +3,14 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Json } from "@/integrations/supabase/types";
 import { verifiedWorkspace } from "./settings.functions";
-import { contradictions, feasibility, missingRequired, recommendCampaignType, specialAdCategories, allowableCpa, trackingReady, type IntakeAnswers } from "./intake";
+import { contradictions, feasibility, marketLanguages, missingRequired, recommendCampaignType, specialAdCategories, allowableCpa, trackingReady, type AssetFile, type IntakeAnswers } from "./intake";
 import { GOOGLE_CAMPAIGN_TYPES, emptyGoogleOptions, googleAssetChecklist, googleCampaignType, googleDraftPlan, type GoogleCampaignOptions } from "./google-campaigns";
 
 const platformSchema = z.enum(["google", "meta"]);
 const answersSchema = z.record(z.string(), z.unknown()).refine((v) => JSON.stringify(v).length < 40000, "too large");
 const HOLD = "إنشاء الحملات على المنصة متوقف حتى يُفعَّل الربط الموثّق (Pipeboard متوقف). لم يحدث أي تغيير إعلاني.";
 
-async function ownedAccount(client: Parameters<typeof verifiedWorkspace>[0], workspaceId: string, accountId: string) {
+export async function ownedAccount(client: Parameters<typeof verifiedWorkspace>[0], workspaceId: string, accountId: string) {
   const { data } = await client.from("ad_accounts").select("id,platform,currency,timezone,name,external_id").eq("id", accountId).eq("workspace_id", workspaceId).maybeSingle();
   if (!data) throw new Error("Forbidden");
   return data;
@@ -29,7 +29,8 @@ export const getAdsSetup = createServerFn({ method: "POST" }).middleware([requir
       context.supabase.from("account_baselines").select("id,status,mode,built_at,expires_at").eq("workspace_id", data.workspaceId).eq("ad_account_id", account.id).order("created_at", { ascending: false }).limit(1).maybeSingle(),
       context.supabase.from("campaign_drafts").select("id,platform,campaign_type,status,spec,lessons_from_history,creatives,created_at,decided_at").eq("workspace_id", data.workspaceId).eq("ad_account_id", account.id).eq("employee_id", "abdullah").order("created_at", { ascending: false }).limit(30),
     ]);
-    const paths = (drafts ?? []).flatMap((d) => (Array.isArray(d.creatives) ? d.creatives : []).flatMap((c) => ((c as { images?: { path: string }[] }).images ?? []).map((i) => i.path))).filter((p) => p.startsWith(`${data.workspaceId}/ads/`));
+    const assetPaths = (((profile?.answers ?? {}) as IntakeAnswers).assetFiles ?? []).map((f) => f.path);
+    const paths = [...(drafts ?? []).flatMap((d) => (Array.isArray(d.creatives) ? d.creatives : []).flatMap((c) => ((c as { images?: { path: string }[] }).images ?? []).map((i) => i.path))), ...assetPaths].filter((p) => p.startsWith(`${data.workspaceId}/ads/`));
     const urls: Record<string, string> = {};
     if (paths.length) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -88,7 +89,7 @@ export const createAdsDraft = createServerFn({ method: "POST" }).middleware([req
     const tracking = trackingReady(answers, [data.platform]);
     if (data.platform === "google" && gType === "performance_max" && !tracking) return { created: false as const, missing: [], questions: ["Performance Max يحتاج تتبع تحويلات جاهزاً (وسم Google والتحويلات المحسّنة). أصلح التتبع أولاً أو اختر البحث."], feasibility: null };
     const isNew = baseline.mode === "new_account";
-    const markets = (answers.markets ?? []).map((m) => ({ market: m, language: answers.languages?.[m] ?? null }));
+    const markets = (answers.markets ?? []).map((m) => ({ market: m, languages: marketLanguages(answers, m) }));
     const googleOptions = { ...emptyGoogleOptions(), ...(data.googleOptions ?? {}) };
     const spec = {
       mode: isNew ? "new_account" : "history", objective: answers.goal, campaignType: choice.type, why: choice.why,
@@ -122,11 +123,13 @@ export const decideAdsDraft = createServerFn({ method: "POST" }).middleware([req
 export const createAdsDraftPaused = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((i: unknown) => z.object({ workspaceId: z.string().uuid(), draftId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await verifiedWorkspace(context.supabase, context.userId, data.workspaceId);
-    const { data: draft } = await context.supabase.from("campaign_drafts").select("status,platform,campaign_type,spec,creatives").eq("workspace_id", data.workspaceId).eq("id", data.draftId).maybeSingle();
+    const { data: draft } = await context.supabase.from("campaign_drafts").select("status,platform,campaign_type,spec,creatives,ad_account_id").eq("workspace_id", data.workspaceId).eq("id", data.draftId).maybeSingle();
     if (draft?.status !== "approved") throw new Error("اعتمد الخطة أولاً.");
     if (draft.platform === "google") {
-      const spec = (draft.spec ?? {}) as { google?: { options?: Partial<GoogleCampaignOptions> }; markets?: { market: string; language: string | null }[] };
-      const check = googleAssetChecklist(googleCampaignType(draft.campaign_type), spec.google?.options ?? {}, (Array.isArray(draft.creatives) ? draft.creatives : []) as never, spec.markets ?? []);
+      const spec = (draft.spec ?? {}) as { google?: { options?: Partial<GoogleCampaignOptions> }; markets?: { market: string; languages?: string[]; language?: string | null }[] };
+      const { data: profile } = await context.supabase.from("business_profiles").select("answers").eq("workspace_id", data.workspaceId).eq("ad_account_id", draft.ad_account_id ?? "").limit(1).maybeSingle();
+      const uploaded = (((profile?.answers ?? {}) as IntakeAnswers).assetFiles ?? []) as AssetFile[];
+      const check = googleAssetChecklist(googleCampaignType(draft.campaign_type), spec.google?.options ?? {}, (Array.isArray(draft.creatives) ? draft.creatives : []) as never, spec.markets ?? [], uploaded);
       if (!check.complete) throw new Error(`الأصول غير مكتملة: ${check.issues.join(" ")}`);
     }
     throw new Error(HOLD);

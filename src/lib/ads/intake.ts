@@ -8,13 +8,20 @@ export type IntakeAnswers = {
   goal?: Goal; aov?: number; margin?: number; ltv?: number; closeRate?: number; salesCycleDays?: number; confirmedCpa?: number;
   monthlyBudget?: number; dailyCap?: number;
   usp?: string; offers?: string; proof?: string; competitors?: string;
-  tone?: string; languages?: Record<string, string>;
-  assets?: string; customerList?: "yes" | "no";
+  tone?: string; languages?: Record<string, string[] | string>;
+  assets?: string; assetFiles?: AssetFile[]; customerList?: "yes" | "no";
   tracking?: { googleTag?: TrackState; enhanced?: TrackState; pixel?: TrackState; capi?: TrackState };
   conversionEvent?: string; offlineConversions?: "yes" | "no";
   ecommerce?: boolean; catalog?: "yes" | "no" | "unsure";
   metaPage?: string; instagram?: string;
 };
+/** Owner-uploaded asset stored privately in the workspace media bucket. */
+export type AssetFile = { id: string; path: string; name: string; contentType: string; size: number; kind: "logo" | "image" | "video" | "other"; uploadedAt: string };
+/** Languages of a market as a clean list; accepts the older single-string shape too. */
+export function marketLanguages(a: IntakeAnswers, market: string): string[] {
+  const v = a.languages?.[market];
+  return (Array.isArray(v) ? v : typeof v === "string" ? [v] : []).map((s) => s.trim()).filter(Boolean);
+}
 export type IntakeStep = { id: number; title: string; required: (keyof IntakeAnswers)[] };
 export const INTAKE_STEPS: IntakeStep[] = [
   { id: 1, title: "النشاط والموقع", required: ["businessName", "website", "landingPages"] },
@@ -40,7 +47,7 @@ export function missingRequired(a: IntakeAnswers, platforms: readonly ("google" 
   if (a.goal === "leads" && !filled(a.closeRate)) missing.push("closeRate");
   if (a.ecommerce && !a.catalog) missing.push("catalog");
   if (platforms.includes("meta") && !filled(a.metaPage)) missing.push("metaPage");
-  for (const m of a.markets ?? []) if (!a.languages?.[m]?.trim()) missing.push(`languages.${m}`);
+  for (const m of a.markets ?? []) if (!marketLanguages(a, m).length) missing.push(`languages.${m}`);
   return [...new Set(missing)];
 }
 

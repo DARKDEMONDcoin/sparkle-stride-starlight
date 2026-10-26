@@ -52,18 +52,25 @@ export function googleCopyInstructions(type: GoogleCampaignType): string {
   return "Responsive search ads: 8-15 headlines <=30 characters, 2-4 descriptions <=90, longHeadlines=[], primary=[].";
 }
 type PlanningCreative = GoogleCopy & { market: string; language: string; status: string; images?: { ratio: string; status: string }[] };
-export function googleAssetChecklist(type: GoogleCampaignType, options: Partial<GoogleCampaignOptions>, creatives: PlanningCreative[], markets: { market: string; language: string | null }[]) {
+type PlanningMarket = { market: string; languages?: string[]; language?: string | null };
+/** Languages of a planned market; accepts the older single-language shape. */
+const marketLangs = (m: PlanningMarket): string[] => (m.languages ?? (m.language ? [m.language] : [])).filter(Boolean);
+export function googleAssetChecklist(type: GoogleCampaignType, options: Partial<GoogleCampaignOptions>, creatives: PlanningCreative[], markets: PlanningMarket[], uploadedAssets: { kind: string }[] = []) {
   if (type === "search") return { complete: true, issues: [] as string[], warnings: [] as string[], platformVerified: false as const };
   const issues: string[] = [], warnings: string[] = ["الروابط ونسب الصور مراجع تخطيط فقط؛ لم نتحقق من ملكية الأصول أو أبعادها وملفاتها أو قبول Google لها."];
   if (!options.businessName?.trim() || chars(options.businessName) > 25) issues.push("اسم النشاط مطلوب وبحد أقصى 25 حرفاً.");
-  if (!publicAssetReference(options.logoUrl ?? "")) issues.push("أضف رابط HTTPS لشعار النشاط المربع.");
+  if (!publicAssetReference(options.logoUrl ?? "") && !uploadedAssets.some((a) => a.kind === "logo")) issues.push("أضف شعار النشاط المربع: ارفع ملف الشعار أو أضف رابط HTTPS له.");
   // The owner's playbook deliberately requires supplied video, even when Google can auto-generate it or accept an image ad.
-  if (!publicAssetReference(options.videoUrl ?? "")) issues.push("أضف رابط فيديو تملكه؛ دليل العمل يشترط الفيديو ولا يعتمد على إنشاء Google التلقائي.");
+  if (!publicAssetReference(options.videoUrl ?? "") && !uploadedAssets.some((a) => a.kind === "video")) issues.push("أضف فيديو تملكه: ارفع ملف الفيديو أو أضف رابطاً له؛ دليل العمل يشترط الفيديو ولا يعتمد على إنشاء Google التلقائي.");
   if (!markets.length) issues.push("الأسواق واللغات غير محددة.");
   for (const m of markets) {
-    const approved = creatives.filter((c) => c.status === "approved" && c.market === m.market && c.language === m.language && !validateGoogleVisualCopy(type, c).length);
-    const covered = approved.some((c) => ["1:1", "1.91:1"].every((ratio) => c.images?.some((i) => i.status === "approved" && i.ratio === ratio)));
-    if (!covered) issues.push(`${m.market}: يحتاج مفهوماً معتمداً بنص صالح وصور معتمدة مربعة 1:1 وأفقية 1.91:1 في المفهوم نفسه.`);
+    const langs = marketLangs(m);
+    if (!langs.length) { issues.push(`${m.market}: حدّد لغة واحدة على الأقل.`); continue; }
+    for (const lang of langs) {
+      const approved = creatives.filter((c) => c.status === "approved" && c.market === m.market && c.language === lang && !validateGoogleVisualCopy(type, c).length);
+      const covered = approved.some((c) => ["1:1", "1.91:1"].every((ratio) => c.images?.some((i) => i.status === "approved" && i.ratio === ratio)));
+      if (!covered) issues.push(`${m.market} (${lang}): يحتاج مفهوماً معتمداً بنص صالح وصور معتمدة مربعة 1:1 وأفقية 1.91:1 في المفهوم نفسه.`);
+    }
   }
   if (type === "performance_max") warnings.push("إشارات الجمهور وموضوعات البحث ليست قيود استهداف؛ حدود البلد واللغة من الخطة. التوسع في الرابط النهائي مغلق في المسودة.");
   if (type === "demand_gen") warnings.push("Demand Gen مكمل للبحث/Shopping وليس بديلاً مثبتاً؛ الصور الرأسية 4:5 والفيديوهات الرأسية توسع تغطية المواضع.");
