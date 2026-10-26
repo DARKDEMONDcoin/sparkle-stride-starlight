@@ -123,7 +123,7 @@ export const decideAdsDraft = createServerFn({ method: "POST" }).middleware([req
 export const createAdsDraftPaused = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((i: unknown) => z.object({ workspaceId: z.string().uuid(), draftId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await verifiedWorkspace(context.supabase, context.userId, data.workspaceId);
-    const { data: draft } = await context.supabase.from("campaign_drafts").select("status,platform,campaign_type,spec,creatives").eq("workspace_id", data.workspaceId).eq("id", data.draftId).maybeSingle();
+    const { data: draft } = await context.supabase.from("campaign_drafts").select("status,platform,campaign_type,spec,creatives,ad_account_id").eq("workspace_id", data.workspaceId).eq("id", data.draftId).maybeSingle();
     if (draft?.status !== "approved") throw new Error("اعتمد الخطة أولاً.");
     if (draft.platform === "google") {
       const spec = (draft.spec ?? {}) as { google?: { options?: Partial<GoogleCampaignOptions> }; markets?: { market: string; languages?: string[]; language?: string | null }[] };
