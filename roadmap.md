@@ -277,3 +277,5 @@
 ## عبدالله — الخطوة 8
 - [x] ملف النشاط (14 خطوة)، تلخيص الموقع، فحص الجدوى، خطط Google Search وMeta Advantage+ للاعتماد، ترتيب الإنشاء المتوقف ثم الإطلاق.
 - [ ] الإنشاء الفعلي على المنصة — بانتظار Pipeboard.
+- [x] October 26 step 11: daily audit built with timer OFF (owner choice). Owner "Run now" button + run history in settings; each pass counts due change reviews, re-checks landing pages not checked in 7 days (max 3/account, honors website switch), records audit_runs and an in-app notification; never changes campaigns. Secret-protected callback exists but is not scheduled. Ad metrics refresh blocked by Pipeboard hold.
+- [ ] Step 11 activation: schedule the daily callback once owner approves the daily cost.
