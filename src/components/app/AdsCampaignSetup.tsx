@@ -5,6 +5,7 @@ import { getAdsSetup, saveAdsIntake, summarizeAdsWebsite, createAdsDraft, decide
 import { generateDraftCopy, decideDraftCreative, generateCreativeImage, decideCreativeImage, type DraftCreative, type Ratio } from "@/lib/ads/creatives.functions";
 import { INTAKE_STEPS, allowableCpa, contradictions, feasibility, missingRequired, type IntakeAnswers } from "@/lib/ads/intake";
 import { Button } from "@/components/ui/button";
+import { AdsExperiments } from "./AdsExperiments";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -92,6 +93,7 @@ export function AdsCampaignSetup({ workspaceId }: { workspaceId: string }) {
           {d.status === "paused_created" && <Button size="sm" disabled={busy} onClick={() => { if (window.confirm(`تأكيد الإطلاق: الميزانية الشهرية ${s["budget"]?.monthly} ${s["budget"]?.currency ?? ""}`)) void run(() => launch({ data: { workspaceId, draftId: d.id } })); }}><Rocket className="size-4" />إطلاق</Button>}
         </div>
       </article>; })}
+    {account && <AdsExperiments workspaceId={workspaceId} accountId={account.id} />}
     <Dialog open={open} onOpenChange={setOpen}><DialogContent dir="rtl" className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
       <DialogHeader><DialogTitle>ملف النشاط · {step}/14 · {INTAKE_STEPS[step - 1]?.title}</DialogTitle></DialogHeader>
       <div className="space-y-4">
