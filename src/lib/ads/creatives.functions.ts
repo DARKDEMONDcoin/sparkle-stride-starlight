@@ -31,10 +31,12 @@ export const generateDraftCopy = createServerFn({ method: "POST" }).middleware([
     const system = buildMediaBuyerPrompt({ task: "creative", platforms: [platform], writingAds: true, guidelines: mediaBuyerGuidelines(guidelines ?? []), businessProfile: JSON.stringify({ answers: profile.answers, site: profile.site_summary }), accountBaseline: JSON.stringify({ lessons: draft.lessons_from_history }) });
     const gType = googleCampaignType(draft.campaign_type);
     const limits = platform === "google" ? googleCopyInstructions(gType) : "Meta: 1-5 primary texts, 1-5 headlines, descriptions up to 1, a CTA such as LEARN_MORE/SIGN_UP/SHOP_NOW.";
-    const specMarkets = (draft.spec as { markets?: unknown[] } | null)?.markets;
-    const rule = conceptCountRule(platform, Array.isArray(specMarkets) ? specMarkets.length : 1);
-    const countText = platform === "meta" ? `${rule.min}-${rule.max} genuinely distinct creative concepts IN TOTAL across markets (different persona, angle, offer or hook each; Advantage+ needs variety)` : "2-4 genuinely distinct creative concepts PER market";
-    const user = `Plan: ${JSON.stringify(draft.spec)}\nWrite ${countText}, natively in that market's language (not translated). ${limits} No guarantees or unsubstantiated claims; ground every line in the profile's USP/proof. Return JSON {"creatives":[{"market","language","concept","hypothesis","persona","angle","offer","hook","headlines":[],"longHeadlines":[],"descriptions":[],"primary":[],"cta"}]}.`;
+    const specMarkets = (draft.spec as { markets?: { market: string; languages?: string[]; language?: string | null }[] } | null)?.markets;
+    const pairs = (Array.isArray(specMarkets) ? specMarkets : []).flatMap((m) => (m.languages ?? (m.language ? [m.language] : [])).filter(Boolean).map((lang) => `${m.market} (${lang})`));
+    const rule = conceptCountRule(platform, Math.max(1, pairs.length || (Array.isArray(specMarkets) ? specMarkets.length : 1)));
+    const countText = platform === "meta" ? `${rule.min}-${rule.max} genuinely distinct creative concepts IN TOTAL across markets (different persona, angle, offer or hook each; Advantage+ needs variety)` : "2-4 genuinely distinct creative concepts PER market-language pair";
+    const pairText = pairs.length ? `\nMarket-language pairs to cover, each with at least one concept: ${pairs.join(", ")}.` : "";
+    const user = `Plan: ${JSON.stringify(draft.spec)}\nWrite ${countText}, natively in that market's language (not translated).${pairText} ${limits} No guarantees or unsubstantiated claims; ground every line in the profile's USP/proof. Return JSON {"creatives":[{"market","language","concept","hypothesis","persona","angle","offer","hook","headlines":[],"longHeadlines":[],"descriptions":[],"primary":[],"cta"}]}.`;
     const { freeChat, parseJson } = await import("@/lib/nour-research.server");
     const raw = await freeChat("media-buyer-creative", [{ role: "system", content: system }, { role: "user", content: user }], { json: true, maxTokens: 9000, timeoutMs: 45000, budgetMs: 55000, attempts: 2 });
     const parsed = out.safeParse(parseJson(raw));
