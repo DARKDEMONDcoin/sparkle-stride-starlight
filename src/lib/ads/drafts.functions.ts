@@ -126,8 +126,10 @@ export const createAdsDraftPaused = createServerFn({ method: "POST" }).middlewar
     const { data: draft } = await context.supabase.from("campaign_drafts").select("status,platform,campaign_type,spec,creatives").eq("workspace_id", data.workspaceId).eq("id", data.draftId).maybeSingle();
     if (draft?.status !== "approved") throw new Error("اعتمد الخطة أولاً.");
     if (draft.platform === "google") {
-      const spec = (draft.spec ?? {}) as { google?: { options?: Partial<GoogleCampaignOptions> }; markets?: { market: string; language: string | null }[] };
-      const check = googleAssetChecklist(googleCampaignType(draft.campaign_type), spec.google?.options ?? {}, (Array.isArray(draft.creatives) ? draft.creatives : []) as never, spec.markets ?? []);
+      const spec = (draft.spec ?? {}) as { google?: { options?: Partial<GoogleCampaignOptions> }; markets?: { market: string; languages?: string[]; language?: string | null }[] };
+      const { data: profile } = await context.supabase.from("business_profiles").select("answers").eq("workspace_id", data.workspaceId).eq("ad_account_id", draft.ad_account_id ?? "").limit(1).maybeSingle();
+      const uploaded = (((profile?.answers ?? {}) as IntakeAnswers).assetFiles ?? []) as AssetFile[];
+      const check = googleAssetChecklist(googleCampaignType(draft.campaign_type), spec.google?.options ?? {}, (Array.isArray(draft.creatives) ? draft.creatives : []) as never, spec.markets ?? [], uploaded);
       if (!check.complete) throw new Error(`الأصول غير مكتملة: ${check.issues.join(" ")}`);
     }
     throw new Error(HOLD);
