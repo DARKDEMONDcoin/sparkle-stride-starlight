@@ -102,7 +102,18 @@ export function AdsCampaignSetup({ workspaceId }: { workspaceId: string }) {
       <DialogHeader><DialogTitle>ملف النشاط · {step}/14 · {INTAKE_STEPS[step - 1]?.title}</DialogTitle></DialogHeader>
       <div className="space-y-4">
         {FIELDS[step]?.map(field)}
-        {step === 1 && answers.website && <div className="space-y-2"><Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => void run(async () => { const r = await summarize({ data: { workspaceId, url: answers.website! } }); setSummary(r.summary); })}><Globe className="size-4" />تلخيص الموقع</Button><Textarea aria-label="ملخص الموقع" rows={5} value={summary} onChange={(e) => setSummary(e.target.value)} placeholder="ملخص قابل للتعديل" /></div>}
+        {step === 11 && account && <div className="space-y-2 rounded-md border border-border p-3">
+          <p className="text-sm font-medium">رفع الأصول (شعار، صور، فيديو — حتى 10 ميجابايت للملف)</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={assetKind} onValueChange={(v) => setAssetKind(v as AssetFile["kind"])}><SelectTrigger className="w-36" aria-label="نوع الأصل"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="logo">شعار</SelectItem><SelectItem value="image">صورة</SelectItem><SelectItem value="video">فيديو</SelectItem><SelectItem value="other">أخرى</SelectItem></SelectContent></Select>
+            <Input type="file" accept="image/png,image/jpeg,image/webp,video/mp4,video/webm,video/quicktime" aria-label="اختر ملفاً" disabled={busy} onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFile(f); e.target.value = ""; }} />
+          </div>
+          {(answers.assetFiles ?? []).length > 0 && <ul className="space-y-2">{(answers.assetFiles ?? []).map((f) => <li key={f.id} className="flex items-center justify-between gap-2 text-sm">
+            <span className="flex min-w-0 items-center gap-2">{f.contentType.startsWith("image/") && data?.imageUrls?.[f.path] ? <img src={data.imageUrls[f.path]} alt={f.name} className="size-10 rounded border border-border object-cover" loading="lazy" /> : null}<span className="truncate">{f.name}</span><span className="shrink-0 text-xs text-muted-foreground">{f.kind === "logo" ? "شعار" : f.kind === "video" ? "فيديو" : f.kind === "image" ? "صورة" : "أخرى"} · {(f.size / 1024 / 1024).toFixed(1)}MB</span></span>
+            <Button size="icon" variant="ghost" className="size-7 shrink-0" aria-label={`حذف ${f.name}`} disabled={busy} onClick={() => removeFile(f)}><X className="size-3" /></Button>
+          </li>)}</ul>}
+        </div>}
+        {step === 1 && answers.website &&  <div className="space-y-2"><Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => void run(async () => { const r = await summarize({ data: { workspaceId, url: answers.website! } }); setSummary(r.summary); })}><Globe className="size-4" />تلخيص الموقع</Button><Textarea aria-label="ملخص الموقع" rows={5} value={summary} onChange={(e) => setSummary(e.target.value)} placeholder="ملخص قابل للتعديل" /></div>}
         {step === 6 && <p className="text-sm text-muted-foreground">المحسوب من أرقامك: {calc ?? "أكمل القيمة والهامش" } — أكّده أو عدّله.</p>}
         {step === 7 && <ul className="list-disc space-y-1 pe-5 text-sm">{feas.issues.map((i) => <li key={i}>{i}</li>)}</ul>}
         {issues.length > 0 && <ul className="list-disc space-y-1 pe-5 text-sm text-destructive">{issues.map((i) => <li key={i}>{i}</li>)}</ul>}
