@@ -4,19 +4,20 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Json } from "@/integrations/supabase/types";
 import { verifiedWorkspace } from "./settings.functions";
 import { validateCopy } from "./intake";
+import { googleCampaignType, googleCopyInstructions, validateGoogleVisualCopy } from "./google-campaigns";
 
-export type DraftCreative = { id: string; market: string; language: string; concept: string; hypothesis: string; headlines: string[]; descriptions: string[]; primary: string[]; cta: string | null; issues: string[]; status: "pending" | "approved" | "rejected"; aiGenerated: true; images?: CreativeImage[] };
+export type DraftCreative = { id: string; market: string; language: string; concept: string; hypothesis: string; headlines: string[]; longHeadlines?: string[]; descriptions: string[]; primary: string[]; cta: string | null; issues: string[]; status: "pending" | "approved" | "rejected"; aiGenerated: true; images?: CreativeImage[] };
 export type CreativeImage = { id: string; ratio: Ratio; path: string; status: "pending" | "approved" | "rejected"; aiGenerated: true; url?: string };
-export const RATIOS = { "1:1": { width: 1024, height: 1024 }, "4:5": { width: 896, height: 1120 }, "9:16": { width: 768, height: 1344 }, "16:9": { width: 1344, height: 768 } } as const;
+export const RATIOS = { "1:1": { width: 1024, height: 1024 }, "4:5": { width: 896, height: 1120 }, "9:16": { width: 768, height: 1344 }, "16:9": { width: 1344, height: 768 }, "1.91:1": { width: 1528, height: 800 } } as const;
 export type Ratio = keyof typeof RATIOS;
 const str = z.string().trim().min(1).max(400);
-const out = z.object({ creatives: z.array(z.object({ market: str, language: str, concept: str, hypothesis: str, headlines: z.array(str).max(15), descriptions: z.array(str).max(4).default([]), primary: z.array(z.string().max(2000)).max(5).default([]), cta: z.string().max(40).nullable().optional() })).max(15) });
+const out = z.object({ creatives: z.array(z.object({ market: str, language: str, concept: str, hypothesis: str, headlines: z.array(str).max(15), longHeadlines: z.array(str).max(5).default([]), descriptions: z.array(str).max(5).default([]), primary: z.array(z.string().max(2000)).max(5).default([]), cta: z.string().max(40).nullable().optional() })).max(15) });
 
 /** Native copy per market language for an owner-approved plan; validated against platform limits, each item approved separately. */
 export const generateDraftCopy = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((i: unknown) => z.object({ workspaceId: z.string().uuid(), draftId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await verifiedWorkspace(context.supabase, context.userId, data.workspaceId);
-    const { data: draft } = await context.supabase.from("campaign_drafts").select("id,status,platform,spec,ad_account_id,business_profile_id,lessons_from_history,creatives").eq("workspace_id", data.workspaceId).eq("id", data.draftId).eq("employee_id", "abdullah").maybeSingle();
+    const { data: draft } = await context.supabase.from("campaign_drafts").select("id,status,platform,campaign_type,spec,ad_account_id,business_profile_id,lessons_from_history,creatives").eq("workspace_id", data.workspaceId).eq("id", data.draftId).eq("employee_id", "abdullah").maybeSingle();
     if (!draft || draft.status !== "approved") throw new Error("اعتمد خطة الحملة أولاً قبل كتابة الإعلانات.");
     const platform = draft.platform === "meta" ? "meta" : "google";
     const [{ data: profile }, { data: guidelines }] = await Promise.all([
@@ -27,13 +28,14 @@ export const generateDraftCopy = createServerFn({ method: "POST" }).middleware([
     const { buildMediaBuyerPrompt } = await import("./prompts/media-buyer.v1");
     const { mediaBuyerGuidelines } = await import("./guidelines");
     const system = buildMediaBuyerPrompt({ task: "creative", platforms: [platform], writingAds: true, guidelines: mediaBuyerGuidelines(guidelines ?? []), businessProfile: JSON.stringify({ answers: profile.answers, site: profile.site_summary }), accountBaseline: JSON.stringify({ lessons: draft.lessons_from_history }) });
-    const limits = platform === "google" ? "Responsive search ads: 8-15 headlines of at most 30 characters, 2-4 descriptions of at most 90 characters, primary=[]." : "Meta: 1-5 primary texts, 1-5 headlines, descriptions up to 1, a CTA such as LEARN_MORE/SIGN_UP/SHOP_NOW.";
-    const user = `Plan: ${JSON.stringify(draft.spec)}\nWrite 2-4 genuinely distinct creative concepts PER market, natively in that market's language (not translated). ${limits} No guarantees or unsubstantiated claims; ground every line in the profile's USP/proof. Return JSON {"creatives":[{"market","language","concept","hypothesis","headlines":[],"descriptions":[],"primary":[],"cta"}]}.`;
+    const gType = googleCampaignType(draft.campaign_type);
+    const limits = platform === "google" ? googleCopyInstructions(gType) : "Meta: 1-5 primary texts, 1-5 headlines, descriptions up to 1, a CTA such as LEARN_MORE/SIGN_UP/SHOP_NOW.";
+    const user = `Plan: ${JSON.stringify(draft.spec)}\nWrite 2-4 genuinely distinct creative concepts PER market, natively in that market's language (not translated). ${limits} No guarantees or unsubstantiated claims; ground every line in the profile's USP/proof. Return JSON {"creatives":[{"market","language","concept","hypothesis","headlines":[],"longHeadlines":[],"descriptions":[],"primary":[],"cta"}]}.`;
     const { freeChat, parseJson } = await import("@/lib/nour-research.server");
     const raw = await freeChat("media-buyer-creative", [{ role: "system", content: system }, { role: "user", content: user }], { json: true, maxTokens: 5000, timeoutMs: 45000, budgetMs: 55000, attempts: 2 });
     const parsed = out.safeParse(parseJson(raw));
     if (!parsed.success || !parsed.data.creatives.length) throw new Error("تعذّر توليد نصوص صالحة؛ حاول مرة أخرى.");
-    const creatives: DraftCreative[] = parsed.data.creatives.map((c) => ({ ...c, cta: c.cta ?? null, id: crypto.randomUUID(), issues: validateCopy(platform, c), status: "pending", aiGenerated: true }));
+    const creatives: DraftCreative[] = parsed.data.creatives.map((c) => ({ ...c, cta: c.cta ?? null, id: crypto.randomUUID(), issues: platform === "google" && gType !== "search" ? validateGoogleVisualCopy(gType, c) : validateCopy(platform, c), status: "pending", aiGenerated: true }));
     const keep = (Array.isArray(draft.creatives) ? draft.creatives : []).filter((c) => (c as { status?: string }).status === "approved");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("campaign_drafts").update({ creatives: [...keep, ...creatives] as unknown as Json }).eq("id", draft.id).eq("status", "approved");
@@ -57,7 +59,7 @@ export const decideDraftCreative = createServerFn({ method: "POST" }).middleware
     return { saved: true };
   });
 
-const ratioSchema = z.enum(["1:1", "4:5", "9:16", "16:9"]);
+const ratioSchema = z.enum(["1:1", "4:5", "9:16", "16:9", "1.91:1"]);
 async function approvedDraft(client: Parameters<typeof verifiedWorkspace>[0], workspaceId: string, draftId: string) {
   const { data: draft } = await client.from("campaign_drafts").select("id,status,creatives,spec").eq("workspace_id", workspaceId).eq("id", draftId).eq("employee_id", "abdullah").maybeSingle();
   if (!draft || draft.status !== "approved") throw new Error("المسودة غير قابلة للتعديل.");

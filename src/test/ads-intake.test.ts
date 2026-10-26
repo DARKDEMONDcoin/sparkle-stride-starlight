@@ -33,3 +33,12 @@ describe("Abdullah intake and feasibility", () => {
     expect(specialAdCategories({ industry: "تمويل عقاري" })).toEqual(expect.arrayContaining(["financial", "housing"]));
   });
 });
+
+import { recommendCampaignType as rct } from "@/lib/ads/intake";
+describe("Google campaign type choice", () => {
+  it("owner choice of Performance Max wins", () => expect(rct({ goal: "sales" }, "google", "performance_max").type).toBe("performance_max"));
+  it("owner choice of Demand Gen wins", () => expect(rct({ goal: "leads" }, "google", "demand_gen").type).toBe("demand_gen"));
+  it("awareness without a choice recommends Demand Gen", () => expect(rct({ goal: "awareness" }, "google").type).toBe("demand_gen"));
+  it("sales without a choice stays on Search", () => expect(rct({ goal: "sales" }, "google").type).toBe("search"));
+  it("Meta stays Advantage+ regardless", () => expect(rct({ goal: "sales" }, "meta", "performance_max").type).toBe("advantage_plus"));
+});
