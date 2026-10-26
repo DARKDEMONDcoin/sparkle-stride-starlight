@@ -4,21 +4,30 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Activity, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { adsApiHealth, getAdsSettings, saveAdsAuditPreference } from "@/lib/ads/settings.functions";
+import { adsApiHealth, getAdsSettings, listAdsAuditRuns, runAdsAuditNow, saveAdsAuditPreference } from "@/lib/ads/settings.functions";
 
 export function AdsGuidelineSettings({ workspaceId }: { workspaceId: string }) {
   const load = useServerFn(getAdsSettings);
   const save = useServerFn(saveAdsAuditPreference);
   const health = useServerFn(adsApiHealth);
+  const listRuns = useServerFn(listAdsAuditRuns);
+  const runNow = useServerFn(runAdsAuditNow);
   const queryClient = useQueryClient();
+  const runs = useQuery({ queryKey: ["ads-audit-runs", workspaceId], queryFn: () => listRuns({ data: { workspaceId } }), retry: false });
+  const trigger = useMutation({ mutationFn: () => runNow({ data: { workspaceId } }), onSuccess: (r) => { toast.success(r.accounts ? "اكتمل التدقيق." : "لا توجد حسابات إعلانية للتدقيق."); void queryClient.invalidateQueries({ queryKey: ["ads-audit-runs", workspaceId] }); }, onError: (e) => toast.error(e.message) });
   const key = ["ads-settings", workspaceId];
   const settings = useQuery({ queryKey: key, queryFn: () => load({ data: { workspaceId } }), retry: false });
   const update = useMutation({ mutationFn: (enabled: boolean) => save({ data: { workspaceId, enabled } }), onSuccess: () => { void queryClient.invalidateQueries({ queryKey: key }); }, onError: (e) => toast.error(e.message) });
   const api = useQuery({ queryKey: ["ads-api-health", workspaceId], queryFn: () => health({ data: { workspaceId } }), enabled: settings.data?.isAdmin === true, retry: false });
   return <section className="border-t border-border py-5 space-y-4" dir="rtl">
     <div className="flex items-center justify-between gap-4">
-      <div><h2 className="font-semibold">تدقيق الحملات اليومي</h2><p className="text-sm text-muted-foreground">التشغيل التلقائي لم يُفعّل بعد؛ يُحفظ تفضيلك للمراحل القادمة.</p></div>
+      <div><h2 className="font-semibold">تدقيق الحملات اليومي</h2><p className="text-sm text-muted-foreground">التشغيل اليومي التلقائي لم يُفعّل بعد؛ يُحفظ تفضيلك، ويمكنك تشغيل التدقيق يدوياً الآن. التدقيق يقترح فقط ولا يغيّر الحملات.</p></div>
       <Switch aria-label="Run a daily campaign audit" checked={settings.data?.dailyAudit ?? false} disabled={!settings.data || update.isPending} onCheckedChange={(enabled) => update.mutate(enabled)} />
+    </div>
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-2"><h3 className="text-sm font-medium">سجل التدقيق</h3><Button size="sm" variant="outline" disabled={trigger.isPending} onClick={() => trigger.mutate()}>{trigger.isPending ? "جارٍ التدقيق…" : "تشغيل التدقيق الآن"}</Button></div>
+      {runs.data?.length === 0 && <p className="text-sm text-muted-foreground">لا توجد عمليات تدقيق سابقة.</p>}
+      {runs.data?.map((r) => <div key={r.id} className="border-b border-border py-2 text-sm"><p className="text-xs text-muted-foreground">{new Date(r.started_at).toLocaleString("ar")} · {r.trigger === "manual" ? "يدوي" : "يومي"} · {r.status === "completed" ? "مكتمل" : r.status === "failed" ? "فشل" : "قيد التشغيل"}</p>{r.summary && <p>{r.summary}</p>}</div>)}
     </div>
     {settings.isPending && <p className="text-sm text-muted-foreground" role="status">جارٍ تحميل الإعدادات…</p>}
     {settings.error && <p className="text-sm text-destructive" role="alert">{settings.error.message}</p>}

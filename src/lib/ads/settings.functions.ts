@@ -50,3 +50,23 @@ export const adsApiHealth = createServerFn({ method: "POST" })
       return { platform, configured, valid: validApiVersion(platform, configured), releasedAt: row.released_at, sunsetAt: row.sunset_at, sunsetMonth: row.sunset_month, precision: row.sunset_precision, source: row.source_url, verifiedAt: row.verified_at, notes: row.notes, ...apiLifecycleHealth({ configured, registered: row.version, sunsetAt: row.sunset_at, sunsetMonth: row.sunset_month, precision: row.sunset_precision }) };
     });
   });
+export const listAdsAuditRuns = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((i: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    await verifiedWorkspace(context.supabase, context.userId, data.workspaceId);
+    const { data: runs, error } = await context.supabase.from("audit_runs").select("id,ad_account_id,trigger,status,summary,started_at,finished_at").eq("workspace_id", data.workspaceId).order("started_at", { ascending: false }).limit(20);
+    if (error) throw new Error("تعذّر قراءة سجل التدقيق.");
+    return runs ?? [];
+  });
+
+/** Owner-triggered audit pass; same work as the (not yet scheduled) daily run. Never changes campaigns. */
+export const runAdsAuditNow = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((i: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    await verifiedWorkspace(context.supabase, context.userId, data.workspaceId);
+    const since = new Date(Date.now() - 10 * 60_000).toISOString();
+    const { count } = await context.supabase.from("audit_runs").select("id", { count: "exact", head: true }).eq("workspace_id", data.workspaceId).eq("trigger", "manual").gte("started_at", since);
+    if (count) throw new Error("شُغّل تدقيق قبل قليل؛ انتظر عشر دقائق.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { runWorkspaceAudit } = await import("./daily-audit.server");
+    const runs = await runWorkspaceAudit(supabaseAdmin, data.workspaceId, context.userId, "manual");
+    return { accounts: runs.length };
+  });

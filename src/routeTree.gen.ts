@@ -68,6 +68,7 @@ import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as STokenRouteImport } from './routes/s.$token'
 import { Route as UseCasesIndexRouteImport } from './routes/use-cases.index'
 import { Route as UseCasesIdRouteImport } from './routes/use-cases.$id'
+import { Route as ApiPublicAdsDailyAuditRouteImport } from './routes/api/public/ads-daily-audit'
 import { Route as ApiPublicInboxWatchRouteImport } from './routes/api/public/inbox-watch'
 import { Route as ApiPublicLearningCycleRouteImport } from './routes/api/public/learning-cycle'
 import { Route as ApiPublicMorningBriefingRouteImport } from './routes/api/public/morning-briefing'
@@ -391,6 +392,11 @@ const UseCasesIdRoute = UseCasesIdRouteImport.update({
   path: '/use-cases/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAdsDailyAuditRoute = ApiPublicAdsDailyAuditRouteImport.update({
+  id: '/api/public/ads-daily-audit',
+  path: '/api/public/ads-daily-audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicInboxWatchRoute = ApiPublicInboxWatchRouteImport.update({
   id: '/api/public/inbox-watch',
   path: '/api/public/inbox-watch',
@@ -593,6 +599,7 @@ export interface FileRoutesByFullPath {
   '/blog/': typeof BlogIndexRoute
   '/employees/': typeof EmployeesIndexRoute
   '/use-cases/': typeof UseCasesIndexRoute
+  '/api/public/ads-daily-audit': typeof ApiPublicAdsDailyAuditRoute
   '/api/public/inbox-watch': typeof ApiPublicInboxWatchRoute
   '/api/public/learning-cycle': typeof ApiPublicLearningCycleRoute
   '/api/public/morning-briefing': typeof ApiPublicMorningBriefingRoute
@@ -679,6 +686,7 @@ export interface FileRoutesByTo {
   '/blog': typeof BlogIndexRoute
   '/employees': typeof EmployeesIndexRoute
   '/use-cases': typeof UseCasesIndexRoute
+  '/api/public/ads-daily-audit': typeof ApiPublicAdsDailyAuditRoute
   '/api/public/inbox-watch': typeof ApiPublicInboxWatchRoute
   '/api/public/learning-cycle': typeof ApiPublicLearningCycleRoute
   '/api/public/morning-briefing': typeof ApiPublicMorningBriefingRoute
@@ -768,6 +776,7 @@ export interface FileRoutesById {
   '/blog/': typeof BlogIndexRoute
   '/employees/': typeof EmployeesIndexRoute
   '/use-cases/': typeof UseCasesIndexRoute
+  '/api/public/ads-daily-audit': typeof ApiPublicAdsDailyAuditRoute
   '/api/public/inbox-watch': typeof ApiPublicInboxWatchRoute
   '/api/public/learning-cycle': typeof ApiPublicLearningCycleRoute
   '/api/public/morning-briefing': typeof ApiPublicMorningBriefingRoute
@@ -858,6 +867,7 @@ export interface FileRouteTypes {
     | '/blog/'
     | '/employees/'
     | '/use-cases/'
+    | '/api/public/ads-daily-audit'
     | '/api/public/inbox-watch'
     | '/api/public/learning-cycle'
     | '/api/public/morning-briefing'
@@ -944,6 +954,7 @@ export interface FileRouteTypes {
     | '/blog'
     | '/employees'
     | '/use-cases'
+    | '/api/public/ads-daily-audit'
     | '/api/public/inbox-watch'
     | '/api/public/learning-cycle'
     | '/api/public/morning-briefing'
@@ -1032,6 +1043,7 @@ export interface FileRouteTypes {
     | '/blog/'
     | '/employees/'
     | '/use-cases/'
+    | '/api/public/ads-daily-audit'
     | '/api/public/inbox-watch'
     | '/api/public/learning-cycle'
     | '/api/public/morning-briefing'
@@ -1096,6 +1108,7 @@ export interface RootRouteChildren {
   BlogIndexRoute: typeof BlogIndexRoute
   EmployeesIndexRoute: typeof EmployeesIndexRoute
   UseCasesIndexRoute: typeof UseCasesIndexRoute
+  ApiPublicAdsDailyAuditRoute: typeof ApiPublicAdsDailyAuditRoute
   ApiPublicInboxWatchRoute: typeof ApiPublicInboxWatchRoute
   ApiPublicLearningCycleRoute: typeof ApiPublicLearningCycleRoute
   ApiPublicMorningBriefingRoute: typeof ApiPublicMorningBriefingRoute
@@ -1530,6 +1543,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UseCasesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/ads-daily-audit': {
+      id: '/api/public/ads-daily-audit'
+      path: '/api/public/ads-daily-audit'
+      fullPath: '/api/public/ads-daily-audit'
+      preLoaderRoute: typeof ApiPublicAdsDailyAuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/inbox-watch': {
       id: '/api/public/inbox-watch'
       path: '/api/public/inbox-watch'
@@ -1844,6 +1864,7 @@ const rootRouteChildren: RootRouteChildren = {
   BlogIndexRoute: BlogIndexRoute,
   EmployeesIndexRoute: EmployeesIndexRoute,
   UseCasesIndexRoute: UseCasesIndexRoute,
+  ApiPublicAdsDailyAuditRoute: ApiPublicAdsDailyAuditRoute,
   ApiPublicInboxWatchRoute: ApiPublicInboxWatchRoute,
   ApiPublicLearningCycleRoute: ApiPublicLearningCycleRoute,
   ApiPublicMorningBriefingRoute: ApiPublicMorningBriefingRoute,
