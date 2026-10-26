@@ -38,12 +38,12 @@ export const moveExperiment = createServerFn({ method: "POST" }).middleware([req
     if (!exp || !canTransition(exp.status as ExperimentStatus, data.to)) throw new Error("لا يمكن نقل التجربة لهذه الحالة.");
     const today = new Date().toISOString().slice(0, 10);
     const patch: Record<string, unknown> = { status: data.to };
-    if (data.to === "running") patch.start_date = today;
-    if (data.to !== "running") patch.end_date = today;
+    if (data.to === "running") patch["start_date"] = today;
+    if (data.to !== "running") patch["end_date"] = today;
     if (data.to === "completed") {
       if (!data.result) throw new Error("أدخل نتائج المجموعتين لإنهاء التجربة.");
       const outcome = judgeExperiment(exp.success_criteria as unknown as SuccessCriteria, data.result.control, data.result.variant);
-      patch.result_summary = { ...data.result, outcome, judgedAt: new Date().toISOString(), source: "owner_entered" };
+      patch["result_summary"] = { ...data.result, outcome, judgedAt: new Date().toISOString(), source: "owner_entered" };
     }
     const { error } = await context.supabase.from("experiments").update(patch as never).eq("id", exp.id).eq("status", exp.status);
     if (error) throw new Error("تعذّر تحديث التجربة.");
