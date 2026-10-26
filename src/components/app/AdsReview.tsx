@@ -1,0 +1,39 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { getAdsReview, runAdsAnalysis, reviewAdsRecommendation } from "@/lib/ads/recommendations.functions";
+import { Button } from "@/components/ui/button";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { SearchCheck, Check, X, Pencil, Save, RefreshCw } from "lucide-react";
+const findingsSchema = z.array(z.object({ code: z.string(), title: z.string(), evidence: z.string(), steps: z.array(z.string()) }));
+const strings = (input: unknown) => { const parsed = z.array(z.string()).safeParse(input); return parsed.success ? parsed.data : []; };
+export function AdsReview({ workspaceId, view }: { workspaceId: string; view: "recommendations" | "tracking" | "structure" }) {
+  const [accountId, setAccountId] = useState<string>(); const [busy, setBusy] = useState(false); const [error, setError] = useState(""); const [result, setResult] = useState<string[]>([]);
+  const [editing, setEditing] = useState<string | null>(null); const [proposal, setProposal] = useState(""); const [metric, setMetric] = useState(""); const [date, setDate] = useState("");
+  const load = useServerFn(getAdsReview); const analyze = useServerFn(runAdsAnalysis); const decide = useServerFn(reviewAdsRecommendation);
+  const query = useQuery({ queryKey: ["ads-review", workspaceId, accountId], queryFn: () => load({ data: { workspaceId, accountId } }), retry: false });
+  const data = query.data;
+  const run = async (fn: () => Promise<unknown>) => { setBusy(true); setError(""); try { await fn(); await query.refetch(); } catch (e) { setError(e instanceof Error ? e.message : "تعذّر حفظ المراجعة."); } finally { setBusy(false); } };
+  const title = view === "tracking" ? "صحة التتبع" : view === "structure" ? "تدقيق الهيكل" : "التوصيات";
+  const audit = view === "tracking" ? data?.tracking[0] : data?.structure[0];
+  const parsed = findingsSchema.safeParse(audit ? ("findings" in audit ? audit.findings : audit.symptoms) : []);
+  return <section className="space-y-5 border-t border-border py-5" dir="rtl">
+    <div className="flex flex-wrap items-center justify-between gap-3"><h1 className="text-xl font-semibold">{title}</h1><div className="flex flex-wrap gap-2">{Boolean(data?.accounts.length) && <Select value={accountId ?? data?.account?.id ?? ""} onValueChange={setAccountId}><SelectTrigger aria-label="الحساب الإعلاني" className="w-56"><SelectValue /></SelectTrigger><SelectContent>{data?.accounts.map((a) => <SelectItem key={a.id} value={a.id}>{a.name ?? a.external_id}</SelectItem>)}</SelectContent></Select>}<Button variant="ghost" size="icon" aria-label="تحديث المراجعات" title="تحديث المراجعات" onClick={() => void query.refetch()}><RefreshCw className="size-4" /></Button></div></div>
+    <p className="text-sm text-muted-foreground">Pipeboard متوقف · الموافقة البشرية لا تعني تنفيذ تغيير إعلاني.</p>
+    {query.isPending && <p role="status">جارٍ تحميل المراجعات…</p>}{(error || query.error) && <p role="alert" className="text-destructive">{error || query.error?.message}</p>}
+    {data && !data.account && <p className="text-muted-foreground">لا توجد حسابات إعلانية محفوظة.</p>}
+    {data?.account && <Button disabled={busy} onClick={() => { const a = data.account; if (a) void run(async () => { const response = await analyze({ data: { workspaceId, accountId: a.id, kind: view === "recommendations" ? "analysis" : view } }); setResult(response.limitations); }); }}><SearchCheck className="size-4" />{view === "recommendations" ? "تحليل الحساب" : "فحص البيانات المتاحة"}</Button>}
+    {result.map((line) => <p role="status" key={line} className="text-sm text-muted-foreground">{line}</p>)}
+    {view !== "recommendations" && <><p className="font-semibold">الدرجة: {audit?.score ?? "غير متاحة دون فحوص مكتملة"}</p>{parsed.success && parsed.data.map((finding) => <article key={finding.code} className="space-y-2 border-b border-border py-4"><h2 className="font-semibold">{finding.title}</h2><p className="text-sm text-muted-foreground">{finding.evidence}</p><ol className="list-decimal space-y-1 ps-5 text-sm">{finding.steps.map((step) => <li key={step}>{step}</li>)}</ol></article>)}{strings(audit?.limitations).map((line) => <p key={line} className="text-sm text-muted-foreground">{line}</p>)}{!audit && data?.account && <p className="text-muted-foreground">لا يوجد فحص محفوظ بعد.</p>}</>}
+    {view === "recommendations" && <>{data?.account && !data.recommendations.length && <p className="text-muted-foreground">لا توجد توصيات مبنية على أدلة جاهزة؛ لا تُنشأ توصيات من بيانات ناقصة.</p>}{data?.recommendations.map((rec) => <article key={rec.id} className="space-y-3 rounded-lg border border-border p-4">
+      <div className="flex flex-wrap justify-between gap-2"><h2 className="font-semibold break-words">{rec.title}</h2><span className="text-xs text-muted-foreground">{({ pending: "بانتظار المراجعة", approved: "معتمد بشرياً", rejected: "مرفوض", applied: "منفّذ", failed: "تعذّر التنفيذ", expired: "منتهي" } as Record<string, string>)[rec.status] ?? rec.status}</span></div>
+      <p className="text-sm whitespace-pre-wrap">{rec.rationale}</p><p className="text-xs text-muted-foreground">المخاطر: {rec.risk_level} · الثقة: {rec.confidence ?? "غير محددة"} · الأساس: {rec.basis ?? "غير محدد"}</p><p className="text-sm">مقياس النجاح: {rec.success_metric ?? "غير محدد"} · المراجعة: {rec.review_after_date ?? "غير محددة"}</p>
+      <details><summary className="cursor-pointer text-sm">الأدلة والتغيير المقترح</summary><pre className="mt-3 overflow-x-auto whitespace-pre-wrap break-words text-xs" dir="ltr">{JSON.stringify({ history: rec.history_evidence, evidence: rec.evidence, change: rec.proposed_change }, null, 2)}</pre></details>
+      {rec.status === "pending" && <div className="flex flex-wrap gap-2"><Button disabled={busy} variant="outline" onClick={() => void run(() => decide({ data: { workspaceId, recommendationId: rec.id, decision: "approve", expectedCreatedAt: rec.created_at } }))}><Check className="size-4" />اعتماد فردي</Button><Button disabled={busy} variant="outline" onClick={() => void run(() => decide({ data: { workspaceId, recommendationId: rec.id, decision: "reject", expectedCreatedAt: rec.created_at } }))}><X className="size-4" />رفض</Button><Button variant="ghost" disabled={busy} onClick={() => { setEditing(rec.id); setProposal(JSON.stringify(rec.proposed_change, null, 2)); setMetric(rec.success_metric ?? ""); setDate(rec.review_after_date?.slice(0, 16) ?? ""); }}><Pencil className="size-4" />تعديل المقترح</Button></div>}
+      {editing === rec.id && <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); void run(async () => { await decide({ data: { workspaceId, recommendationId: rec.id, expectedCreatedAt: rec.created_at, decision: "edit", change: JSON.parse(proposal), successMetric: metric, reviewAt: new Date(date).toISOString() } }); setEditing(null); }); }}><Textarea aria-label="التغيير المقترح" dir="ltr" value={proposal} onChange={(e) => setProposal(e.target.value)} /><Input aria-label="مقياس النجاح" value={metric} onChange={(e) => setMetric(e.target.value)} required /><Input aria-label="موعد المراجعة" type="datetime-local" value={date} onChange={(e) => setDate(e.target.value)} required /><Button disabled={busy} type="submit"><Save className="size-4" />حفظ وإعادة المراجعة</Button></form>}
+    </article>)}<div className="border-t border-border pt-4"><h2 className="mb-2 font-semibold">سجل القرارات</h2>{data?.reviews.map((r) => <p key={r.id} className="text-sm text-muted-foreground">{r.decision === "reject" ? "رفض" : r.decision === "edit" ? "تعديل" : "اعتماد"} · {new Date(r.created_at).toLocaleString("ar-EG-u-nu-latn")}</p>)}</div></>}
+  </section>;
+}
