@@ -117,8 +117,12 @@ export function validateCopy(platform: "google" | "meta", copy: { headlines: str
   return issues;
 }
 /** Explained type choice; never a blind default. */
-export function recommendCampaignType(a: IntakeAnswers, platform: "google" | "meta"): { type: string; why: string } {
+/** Google: an explicit owner choice wins; otherwise awareness → Demand Gen, everything else → Search. */
+export function recommendCampaignType(a: IntakeAnswers, platform: "google" | "meta", ownerChoice?: "search" | "performance_max" | "demand_gen"): { type: string; why: string } {
   if (platform === "meta") return { type: "advantage_plus", why: "هيكل Advantage+ الموحد: ميزانية وجمهور ومواضع Advantage+، حملة لكل هدف/عرض ومجموعة إعلانية واسعة بمفاهيم إبداعية متنوعة." };
-  if (a.goal === "awareness") return { type: "search", why: "الوعي غير مدعوم في هذه المرحلة على Google؛ نبدأ بالبحث لالتقاط الطلب الموجود، وDemand Gen لاحقاً." };
+  if (ownerChoice === "performance_max") return { type: "performance_max", why: "اخترت Performance Max: حملة واحدة بمجموعات أصول قليلة حسب الرسالة أو المنتج، تحتاج تتبع تحويلات موثوقاً وأصولاً كاملة (نصوص، صور مربعة وأفقية، شعار، فيديو)." };
+  if (ownerChoice === "demand_gen") return { type: "demand_gen", why: "اخترت Demand Gen: إعلانات مصوّرة على YouTube وDiscover وGmail لخلق الطلب، مكمّلة للبحث وليست بديلاً عنه." };
+  if (ownerChoice === "search") return { type: "search", why: "اخترت البحث: يلتقط نية الشراء العالية الموجودة." };
+  if (a.goal === "awareness") return { type: "demand_gen", why: "هدف الوعي يناسب Demand Gen لخلق الطلب بإعلانات مصوّرة؛ يمكنك اختيار البحث بدلاً منه." };
   return { type: "search", why: "البحث يلتقط نية الشراء العالية ويناسب البدء قبل تراكم بيانات تحويل كافية لـ Performance Max." };
 }
