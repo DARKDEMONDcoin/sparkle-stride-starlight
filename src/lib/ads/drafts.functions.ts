@@ -3,14 +3,14 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Json } from "@/integrations/supabase/types";
 import { verifiedWorkspace } from "./settings.functions";
-import { contradictions, feasibility, missingRequired, recommendCampaignType, specialAdCategories, allowableCpa, trackingReady, type IntakeAnswers } from "./intake";
+import { contradictions, feasibility, marketLanguages, missingRequired, recommendCampaignType, specialAdCategories, allowableCpa, trackingReady, type AssetFile, type IntakeAnswers } from "./intake";
 import { GOOGLE_CAMPAIGN_TYPES, emptyGoogleOptions, googleAssetChecklist, googleCampaignType, googleDraftPlan, type GoogleCampaignOptions } from "./google-campaigns";
 
 const platformSchema = z.enum(["google", "meta"]);
 const answersSchema = z.record(z.string(), z.unknown()).refine((v) => JSON.stringify(v).length < 40000, "too large");
 const HOLD = "إنشاء الحملات على المنصة متوقف حتى يُفعَّل الربط الموثّق (Pipeboard متوقف). لم يحدث أي تغيير إعلاني.";
 
-async function ownedAccount(client: Parameters<typeof verifiedWorkspace>[0], workspaceId: string, accountId: string) {
+export async function ownedAccount(client: Parameters<typeof verifiedWorkspace>[0], workspaceId: string, accountId: string) {
   const { data } = await client.from("ad_accounts").select("id,platform,currency,timezone,name,external_id").eq("id", accountId).eq("workspace_id", workspaceId).maybeSingle();
   if (!data) throw new Error("Forbidden");
   return data;
