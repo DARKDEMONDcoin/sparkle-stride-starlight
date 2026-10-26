@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Json } from "@/integrations/supabase/types";
 import { verifiedWorkspace } from "./settings.functions";
 import { contradictions, feasibility, missingRequired, recommendCampaignType, specialAdCategories, allowableCpa, trackingReady, type IntakeAnswers } from "./intake";
+import { GOOGLE_CAMPAIGN_TYPES, emptyGoogleOptions, googleAssetChecklist, googleCampaignType, googleDraftPlan, type GoogleCampaignOptions } from "./google-campaigns";
 
 const platformSchema = z.enum(["google", "meta"]);
 const answersSchema = z.record(z.string(), z.unknown()).refine((v) => JSON.stringify(v).length < 40000, "too large");
@@ -121,8 +122,13 @@ export const decideAdsDraft = createServerFn({ method: "POST" }).middleware([req
 export const createAdsDraftPaused = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((i: unknown) => z.object({ workspaceId: z.string().uuid(), draftId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await verifiedWorkspace(context.supabase, context.userId, data.workspaceId);
-    const { data: draft } = await context.supabase.from("campaign_drafts").select("status").eq("workspace_id", data.workspaceId).eq("id", data.draftId).maybeSingle();
+    const { data: draft } = await context.supabase.from("campaign_drafts").select("status,platform,campaign_type,spec,creatives").eq("workspace_id", data.workspaceId).eq("id", data.draftId).maybeSingle();
     if (draft?.status !== "approved") throw new Error("اعتمد الخطة أولاً.");
+    if (draft.platform === "google") {
+      const spec = (draft.spec ?? {}) as { google?: { options?: Partial<GoogleCampaignOptions> }; markets?: { market: string; language: string | null }[] };
+      const check = googleAssetChecklist(googleCampaignType(draft.campaign_type), spec.google?.options ?? {}, (Array.isArray(draft.creatives) ? draft.creatives : []) as never, spec.markets ?? []);
+      if (!check.complete) throw new Error(`الأصول غير مكتملة: ${check.issues.join(" ")}`);
+    }
     throw new Error(HOLD);
   });
 export const launchAdsDraft = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((i: unknown) => z.object({ workspaceId: z.string().uuid(), draftId: z.string().uuid() }).parse(i))
