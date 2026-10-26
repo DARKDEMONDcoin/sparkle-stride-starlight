@@ -35,7 +35,7 @@ export const uploadAdsAsset = createServerFn({ method: "POST" }).middleware([req
     const mimeKind = ALLOWED[data.contentType];
     if (!mimeKind) throw new Error("نوع الملف غير مدعوم؛ ارفع صورة (PNG/JPG/WebP) أو فيديو (MP4/WebM/MOV).");
     if (data.kind === "logo" && mimeKind !== "image") throw new Error("الشعار يجب أن يكون صورة.");
-    const bytes = Buffer.from(data.dataBase64, "base64");
+    const bytes = Uint8Array.from(atob(data.dataBase64), (c) => c.charCodeAt(0));
     if (!bytes.length || bytes.length > MAX_BYTES) throw new Error("حجم الملف يتجاوز 10 ميجابايت.");
     const profile = await profileRow(context.supabase, data.workspaceId, account.id);
     const answers = (profile.answers ?? {}) as IntakeAnswers;
