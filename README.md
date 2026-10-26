@@ -31,13 +31,44 @@ npm run dev
 
 Extend the permanent employee `abdullah`; preserve Adam's existing advertising actions. New Media Buyer internal calls use authenticated TanStack server functions; OAuth/webhook/scheduler callbacks use server routes with caller verification. Browser-supplied workspace IDs are checked against the authenticated owner. No new Supabase Edge Functions.
 
-The additive schema uses the existing `workspace_id` tenant convention, owner RLS, cross-tenant/account reference validation and an immutable `change_log`. Baselines, history, outcomes, tracking/structure/page audits, experiments, creative concepts, API usage and resumable `ad_jobs` are storage foundations only: no history pull, evidence-gate execution, provider adapter or scheduler is activated in step 1.
+The additive schema uses the existing `workspace_id` tenant convention, owner RLS, cross-tenant/account reference validation and an immutable `change_log`. Step 1 introduced storage foundations. Later increments added database evidence and draft-transition triggers, cached reviews and safe page audits; these safeguards are installed, but no verified live ingestion, provider execution or scheduler is active. Storage and safeguards must not be described as operational Google/Meta integration.
 
-Abdullah uses existing employee-scoped `brain_items` guidelines. Daily audit preference is saved in `ad_guardrails`, defaults off, and does not execute anything yet. The API health panel is platform-admin-only; `user_roles` assignments are privileged provisioning, never user-editable. No administrator is auto-assigned. Authenticated owner settings read/write through RLS; server-generated evidence/job tables grant owners read access only.
+Abdullah uses existing employee-scoped `brain_items` guidelines. Active rules enter the smalltalk/model prompt path; non-smalltalk turns currently return deterministic evidence reports instead of model-generated recommendations. Daily audit preference is saved in `ad_guardrails`, defaults off, and does not execute anything yet. The API health panel requires both ownership of the supplied workspace and a protected platform-admin role; `user_roles` assignments are privileged provisioning, never user-editable. No administrator is auto-assigned. Authenticated owner settings read/write through RLS; server-generated evidence/job tables grant owners read access only.
 
 `GOOGLE_ADS_API_VERSION` and `META_MARKETING_API_VERSION` are server-side overrides; absent overrides use the database version registry (initially v26 and v26.0). Health reports unknown/unverified lifecycles, uses a 90-day warning, and represents Google's tentative November 2027 sunset as month precision—not an invented exact date. Meta Marketing's sunset is unknown; Graph lifecycle dates are not substitutes. This is lifecycle/configuration checking, not a live provider connectivity test. Existing Adam API paths remain unchanged.
 
-Next: configured `AD_PROVIDER_GOOGLE`/`AD_PROVIDER_META` (direct/pipeboard/windsor), tenant overrides, Pipeboard first and capability-normalized adapters. No provider is active for Abdullah yet; no credentials are requested at step 1. Provider consent and required partner/direct OAuth secrets will be documented when the provider is implemented. PageSpeed will require a server-only Google API key in the landing-page step.
+Provider selection already supports `AD_PROVIDER_GOOGLE`/`AD_PROVIDER_META` (`direct`/`pipeboard`/`windsor`) and workspace overrides, with Pipeboard as the configured fallback. **No provider is operational for Abdullah:** all implemented capability flags remain false, and connection/write entry points fail closed. Selecting a provider or supplying credentials does not enable it. No credentials are requested in step 1.
+
+### Configuration and access prerequisites
+
+All private credentials stay in the existing server secret store/runtime, never browser code, committed files, chat, or ordinary database rows. These names describe existing code or deferred prerequisites, not verified credentials:
+
+| Configuration | Purpose and current boundary |
+| --- | --- |
+| `GOOGLE_ADS_API_VERSION`, `META_MARKETING_API_VERSION` | Optional server overrides of registry versions; unsupported/unregistered versions are not reported healthy. |
+| `AD_PROVIDER_GOOGLE`, `AD_PROVIDER_META` | Provider selection only; does not activate connectivity. |
+| `PIPEBOARD_API_KEY` | Name read by the provisional partner scaffold. An approved partner key, purchased account slots, authenticated integration guide, exact tool schemas and tenant binding must be verified before implementation. An ordinary MCP token is not a substitute. |
+| `GOOGLE_ADS_DEVELOPER_TOKEN`, `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | Deferred direct-Google prerequisites; no Media Buyer OAuth flow or callback URI is implemented. |
+| `META_APP_ID`, `META_APP_SECRET` | Deferred direct-Meta prerequisites; no Media Buyer OAuth flow or callback URI is implemented. |
+| `PAGESPEED_API_KEY` | Server-only Google key for PageSpeed Insights v5. Live key/quota availability is unverified; absence/failure appears as an audit limitation. |
+
+Google developer-token **Basic** access permits production/test accounts with 15,000 operations per day. **Standard** permits production/test accounts without that daily cap, but other service/request quotas still apply. Permissible use is assigned separately and can restrict available features. Sources: [access levels](https://developers.google.com/google-ads/api/docs/api-policy/access-levels), [quotas](https://developers.google.com/google-ads/api/docs/best-practices/quotas).
+
+Meta Marketing API tier names are **Limited Access** and **Full Access** (formerly Marketing API Standard/Advanced). Full Access requires the applicable App Review upgrade; permissions/features have their own access requirements. Do not conflate Marketing API tiers with permission-level access labels. Sources: [authorization](https://developers.facebook.com/docs/marketing-api/get-started/authorization/), [rate limits](https://developers.facebook.com/docs/marketing-api/overview/rate-limiting/).
+
+Version references: [Google release notes](https://developers.google.com/google-ads/api/docs/release-notes), [Google sunset schedule](https://developers.google.com/google-ads/api/docs/sunset-dates), [Meta version availability](https://developers.facebook.com/docs/graph-api/changelog/). Published lifecycle dates and live account eligibility are separate checks; unknown dates stay unknown.
+
+### Consent, redirects and switching providers
+
+The existing Connections notice names Pipeboard or Windsor when selected; customers must know the third party processes their advertising data. Page audits also send the public destination to Google DNS/PageSpeed. No live partner authorization is enabled.
+
+Media Buyer redirect URIs are **not implemented yet**. Do not reuse unrelated platform/social OAuth callbacks or invent a callback URL. Future callbacks must derive their public origin from `src/lib/site-origin.ts`, verify state/caller and tenant binding, and keep credentials server-only.
+
+Moving to direct OAuth requires implementing and verifying the adapter, minimum scopes (Google `adwords`; Meta `ads_management`, `ads_read`, `business_management`, `pages_read_engagement`), refresh/revocation, encrypted per-workspace credential references and normalized read/write contracts first. Preserve account/history IDs; obtain customer authorization; verify the configured callback; test sandbox reads and approved PAUSED creation; only then update the workspace override or provider environment setting. Changing config alone is not a migration or proof of connectivity. See [Pipeboard readiness](docs/qa/pipeboard-step-2-readiness.md).
+
+### Step 1 verification boundary — 26 October 2026
+
+Live read-only schema checks confirmed RLS and authenticated/service grants on guidelines, guardrails, API registry and protected roles, plus installed tenant/evidence/draft safeguards. Focused tests verify owner-scoped preference save/read, default-off behavior, failure propagation, admin-only registry access, version overrides and unknown sunset handling. These handler tests use mocks: they do not prove real session authentication, UI persistence, or hosted owner/admin RLS behavior. This external Supabase project does not provide a managed browser session; those signed-in checks remain open. No test user/admin was created, no user preference changed, and no live provider or scheduler activated. See [step 1 verification](docs/qa/media-buyer-step-1-verification.md).
 
 Approved later orchestration: daily Vercel Cron plus a durable external queue calling verified TanStack routes; confirm the queue service and cost before setup. Persist progress, leases, backoff and denial pauses. The Vercel project requests 300-second functions; deployed duration/memory are unverified (settings read denied). Design small resumable chunks, not work after an HTTP response. No cron or queue runner has been installed.
 
@@ -47,7 +78,7 @@ The owner authorized provider-independent work with Pipeboard inactive. `/app/ad
 
 `ads_claim_job` and `ads_checkpoint_job` are callable only by `service_role`; owners retain read-only job access. Claims acquire expiring tokens atomically, checkpoints reject stale tokens, and paused jobs are not automatically reclaimed. The internal history chunk helper processes at most three units within a 20-second starting-work budget. An eventual adapter must use bounded requests and durably upsert each unit before returning; idempotent ingestion remains unimplemented. The held entry point persists `provider_on_hold` without provider calls. No enqueue endpoint, scheduler, partner ingestion, or platform mutation is active.
 
-Focused tests verify calculations, contracts, tenant rejection, chunk limits, resume cursors and no-network holds. Database grants were checked; signed-in account UI and concurrent database-job execution are not verified. Full historical sync, weekly/dimension storage, baseline/evidence enforcement and later specification steps remain outstanding.
+Focused tests verify calculations, contracts, tenant rejection, chunk limits, resume cursors and no-network holds. Database grants were checked; signed-in account UI and concurrent database-job execution are not verified. Database evidence enforcement exists, but full historical sync, weekly/dimensional ingestion, operational ready-baseline production and later execution steps remain outstanding.
 
 ## Media Buyer landing pages — provider-independent increment
 
