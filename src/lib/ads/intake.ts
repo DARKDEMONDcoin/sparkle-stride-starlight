@@ -8,8 +8,8 @@ export type IntakeAnswers = {
   goal?: Goal; aov?: number; margin?: number; ltv?: number; closeRate?: number; salesCycleDays?: number; confirmedCpa?: number;
   monthlyBudget?: number; dailyCap?: number;
   usp?: string; offers?: string; proof?: string; competitors?: string;
-  tone?: string; languages?: Record<string, string>;
-  assets?: string; customerList?: "yes" | "no";
+  tone?: string; languages?: Record<string, string[] | string>;
+  assets?: string; assetFiles?: AssetFile[]; customerList?: "yes" | "no";
   tracking?: { googleTag?: TrackState; enhanced?: TrackState; pixel?: TrackState; capi?: TrackState };
   conversionEvent?: string; offlineConversions?: "yes" | "no";
   ecommerce?: boolean; catalog?: "yes" | "no" | "unsure";
