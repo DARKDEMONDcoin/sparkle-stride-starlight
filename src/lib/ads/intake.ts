@@ -47,7 +47,7 @@ export function missingRequired(a: IntakeAnswers, platforms: readonly ("google" 
   if (a.goal === "leads" && !filled(a.closeRate)) missing.push("closeRate");
   if (a.ecommerce && !a.catalog) missing.push("catalog");
   if (platforms.includes("meta") && !filled(a.metaPage)) missing.push("metaPage");
-  for (const m of a.markets ?? []) if (!a.languages?.[m]?.trim()) missing.push(`languages.${m}`);
+  for (const m of a.markets ?? []) if (!marketLanguages(a, m).length) missing.push(`languages.${m}`);
   return [...new Set(missing)];
 }
 
