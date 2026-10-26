@@ -1,0 +1,1 @@
+ALTER FUNCTION public.ads_is_admin() SECURITY INVOKER;

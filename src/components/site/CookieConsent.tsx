@@ -1,0 +1,73 @@
+import { Link } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+
+import { Button } from "@/components/ui/button";
+
+const CONSENT_KEY = "sahl:cookie-consent";
+const SHOW_DELAY_MS = 1_500;
+const AUTO_HIDE_MS = 18_000;
+const EXIT_MS = 240;
+
+type ConsentChoice = "accepted" | "declined";
+
+export function CookieConsent() {
+  const [visible, setVisible] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  const hideTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (window.localStorage.getItem(CONSENT_KEY)) return;
+
+    const showTimer = window.setTimeout(() => {
+      setVisible(true);
+      hideTimer.current = window.setTimeout(() => { try { window.localStorage.setItem(CONSENT_KEY, "dismissed"); } catch { /* optional */ } setLeaving(true); }, AUTO_HIDE_MS);
+    }, SHOW_DELAY_MS);
+
+    return () => {
+      window.clearTimeout(showTimer);
+      if (hideTimer.current !== null) window.clearTimeout(hideTimer.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!leaving) return;
+    const exitTimer = window.setTimeout(() => setVisible(false), EXIT_MS);
+    return () => window.clearTimeout(exitTimer);
+  }, [leaving]);
+
+  const choose = (choice: ConsentChoice) => {
+    window.localStorage.setItem(CONSENT_KEY, choice);
+    if (hideTimer.current !== null) window.clearTimeout(hideTimer.current);
+    setLeaving(true);
+  };
+
+  /** يحجز مساحة أسفل الصفحة ما دام الشريط ظاهرًا حتى لا يغطي أي محتوى أو زر. */
+  useEffect(() => {
+    const root = document.documentElement;
+    if (visible && !leaving) root.classList.add("has-cookie-bar");
+    else root.classList.remove("has-cookie-bar");
+    return () => root.classList.remove("has-cookie-bar");
+  }, [visible, leaving]);
+
+  if (!visible) return null;
+
+  return (
+    <aside
+      className={`sahl-cookie-consent liquid-glass-sahl${leaving ? " is-leaving" : ""}`}
+      aria-label="إعدادات ملفات الارتباط"
+      aria-live="polite"
+    >
+      <p>
+        نستخدم ملفات تعريف الارتباط لتحسين تجربتك. <Link to="/privacy">سياسة الخصوصية</Link>
+      </p>
+      <div className="sahl-cookie-actions">
+        <Button size="sm" className="bg-ink text-ivory hover:bg-ink-2" onClick={() => choose("accepted")}>
+          موافق
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => choose("declined")}>
+          لا، شكرًا
+        </Button>
+      </div>
+    </aside>
+  );
+}

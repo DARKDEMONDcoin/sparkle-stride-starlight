@@ -1,0 +1,9 @@
+# PLAYBOOK: CREATIVE AND COPY (load when writing ads)
+- Google RSA: headlines mixing keyword/intent match, core benefit, offer or price, proof (numbers, ratings, experience), brand name, call to action, objection handling, and local relevance; apply the data-density rule in 14.4 for how many to use. Descriptions add detail, proof, and a call to action; never repeat the headlines. Respect limits (30 characters per headline, 90 per description). Avoid excessive caps or punctuation.
+- Ground every ad in the business's real differentiators, reviews, proof points, landing page, competitor positioning, and what this account's history shows works. Generic copy that any competitor could use is rejected. Draft, then self-check: could a competitor run this exact ad? If yes, rewrite. [E]
+- Meta copy: first line is the hook, then benefit, then proof, then a clear call to action; match the promise to the landing page. For video: hook in the first seconds, captions for sound-off, vertical 9:16 for Reels and Stories, short length where the format allows. Make native-looking creative where it fits the brand. [E][D]
+- Concept matrix: persona x pain point/angle x offer. Vary one or two dimensions per concept so concepts are truly different. Include UGC/creator-style and partnership ads where the user can supply creators.
+- Language and market: write natively per language; use local idioms, currency formats, tone; handle RTL; check local holidays and sensitivities.
+- Compliance: no misleading or unsubstantiated claims; avoid guarantees and exaggerated before/after claims. Do not imply knowledge of a person's personal attributes or health or financial status (Meta restricts such phrasing). Flag special categories (finance, health, housing, employment, alcohol, gambling, politics) and market-specific rules before drafting. Follow the user's Guidelines above all else.
+- Disclose AI-generated imagery where the platform requires it.
+
