@@ -15,6 +15,13 @@ export type IntakeAnswers = {
   ecommerce?: boolean; catalog?: "yes" | "no" | "unsure";
   metaPage?: string; instagram?: string;
 };
+/** Owner-uploaded asset stored privately in the workspace media bucket. */
+export type AssetFile = { id: string; path: string; name: string; contentType: string; size: number; kind: "logo" | "image" | "video" | "other"; uploadedAt: string };
+/** Languages of a market as a clean list; accepts the older single-string shape too. */
+export function marketLanguages(a: IntakeAnswers, market: string): string[] {
+  const v = a.languages?.[market];
+  return (Array.isArray(v) ? v : typeof v === "string" ? [v] : []).map((s) => s.trim()).filter(Boolean);
+}
 export type IntakeStep = { id: number; title: string; required: (keyof IntakeAnswers)[] };
 export const INTAKE_STEPS: IntakeStep[] = [
   { id: 1, title: "النشاط والموقع", required: ["businessName", "website", "landingPages"] },
