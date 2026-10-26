@@ -29,7 +29,8 @@ export const getAdsSetup = createServerFn({ method: "POST" }).middleware([requir
       context.supabase.from("account_baselines").select("id,status,mode,built_at,expires_at").eq("workspace_id", data.workspaceId).eq("ad_account_id", account.id).order("created_at", { ascending: false }).limit(1).maybeSingle(),
       context.supabase.from("campaign_drafts").select("id,platform,campaign_type,status,spec,lessons_from_history,creatives,created_at,decided_at").eq("workspace_id", data.workspaceId).eq("ad_account_id", account.id).eq("employee_id", "abdullah").order("created_at", { ascending: false }).limit(30),
     ]);
-    const paths = (drafts ?? []).flatMap((d) => (Array.isArray(d.creatives) ? d.creatives : []).flatMap((c) => ((c as { images?: { path: string }[] }).images ?? []).map((i) => i.path))).filter((p) => p.startsWith(`${data.workspaceId}/ads/`));
+    const assetPaths = (((profile?.answers ?? {}) as IntakeAnswers).assetFiles ?? []).map((f) => f.path);
+    const paths = [...(drafts ?? []).flatMap((d) => (Array.isArray(d.creatives) ? d.creatives : []).flatMap((c) => ((c as { images?: { path: string }[] }).images ?? []).map((i) => i.path))), ...assetPaths].filter((p) => p.startsWith(`${data.workspaceId}/ads/`));
     const urls: Record<string, string> = {};
     if (paths.length) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -88,7 +89,7 @@ export const createAdsDraft = createServerFn({ method: "POST" }).middleware([req
     const tracking = trackingReady(answers, [data.platform]);
     if (data.platform === "google" && gType === "performance_max" && !tracking) return { created: false as const, missing: [], questions: ["Performance Max يحتاج تتبع تحويلات جاهزاً (وسم Google والتحويلات المحسّنة). أصلح التتبع أولاً أو اختر البحث."], feasibility: null };
     const isNew = baseline.mode === "new_account";
-    const markets = (answers.markets ?? []).map((m) => ({ market: m, language: answers.languages?.[m] ?? null }));
+    const markets = (answers.markets ?? []).map((m) => ({ market: m, languages: marketLanguages(answers, m) }));
     const googleOptions = { ...emptyGoogleOptions(), ...(data.googleOptions ?? {}) };
     const spec = {
       mode: isNew ? "new_account" : "history", objective: answers.goal, campaignType: choice.type, why: choice.why,
