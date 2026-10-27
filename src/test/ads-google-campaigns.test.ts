@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { emptyGoogleOptions, googleAssetChecklist } from "@/lib/ads/google-campaigns";
 
-const approvedCreative = (market: string, language: string) => ({
+const approvedCreative = (market: string, language: string, pmax = true) => ({
   market, language, status: "approved",
   headlines: ["عرض خاص", "اكتشف المزيد", "تسوّق الآن"],
-  longHeadlines: ["عنوان طويل صالح"],
+  longHeadlines: pmax ? ["عنوان طويل صالح"] : [],
   descriptions: ["وصف أول صالح", "وصف ثانٍ صالح"],
   images: [{ ratio: "1:1", status: "approved" }, { ratio: "1.91:1", status: "approved" }],
 });
