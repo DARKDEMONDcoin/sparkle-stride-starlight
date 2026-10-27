@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getAdsSetup, saveAdsIntake, summarizeAdsWebsite, createAdsDraft, decideAdsDraft, createAdsDraftPaused, launchAdsDraft } from "@/lib/ads/drafts.functions";
-import { generateDraftCopy, decideDraftCreative, generateCreativeImage, decideCreativeImage, type DraftCreative, type Ratio } from "@/lib/ads/creatives.functions";
+import { generateDraftCopy, decideDraftCreative, generateCreativeImage, decideCreativeImage, generateCreativeVideo, checkCreativeVideo, decideCreativeVideo, type DraftCreative, type Ratio } from "@/lib/ads/creatives.functions";
 import { INTAKE_STEPS, allowableCpa, contradictions, feasibility, marketLanguages, missingRequired, type AssetFile, type IntakeAnswers } from "@/lib/ads/intake";
 import { uploadAdsAsset, deleteAdsAsset } from "@/lib/ads/assets.functions";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,7 @@ export function AdsCampaignSetup({ workspaceId }: { workspaceId: string }) {
   const [gType, setGType] = useState<GoogleCampaignType>("search"); const [gOpt, setGOpt] = useState<GoogleCampaignOptions>(emptyGoogleOptions());
   const [busy, setBusy] = useState(false); const [error, setError] = useState(""); const [notice, setNotice] = useState<string[]>([]);
   const [assetKind, setAssetKind] = useState<AssetFile["kind"]>("image");
-  const load = useServerFn(getAdsSetup), save = useServerFn(saveAdsIntake), summarize = useServerFn(summarizeAdsWebsite), create = useServerFn(createAdsDraft), decide = useServerFn(decideAdsDraft), pause = useServerFn(createAdsDraftPaused), launch = useServerFn(launchAdsDraft), gen = useServerFn(generateDraftCopy), decideC = useServerFn(decideDraftCreative), genImg = useServerFn(generateCreativeImage), decideImg = useServerFn(decideCreativeImage), upAsset = useServerFn(uploadAdsAsset), delAsset = useServerFn(deleteAdsAsset);
+  const load = useServerFn(getAdsSetup), save = useServerFn(saveAdsIntake), summarize = useServerFn(summarizeAdsWebsite), create = useServerFn(createAdsDraft), decide = useServerFn(decideAdsDraft), pause = useServerFn(createAdsDraftPaused), launch = useServerFn(launchAdsDraft), gen = useServerFn(generateDraftCopy), decideC = useServerFn(decideDraftCreative), genImg = useServerFn(generateCreativeImage), decideImg = useServerFn(decideCreativeImage), genVid = useServerFn(generateCreativeVideo), checkVid = useServerFn(checkCreativeVideo), decideVid = useServerFn(decideCreativeVideo), upAsset = useServerFn(uploadAdsAsset), delAsset = useServerFn(deleteAdsAsset);
   const uploadFile = (file: File) => { if (!account) return; const reader = new FileReader(); reader.onload = () => void run(async () => { const b64 = String(reader.result).split(",")[1] ?? ""; const r = await upAsset({ data: { workspaceId, accountId: account.id, name: file.name, contentType: file.type, kind: assetKind, dataBase64: b64 } }); setAnswers((a) => ({ ...a, assetFiles: [...(a.assetFiles ?? []), r.file] })); }); reader.readAsDataURL(file); };
   const removeFile = (f: AssetFile) => { if (!account) return; void run(async () => { await delAsset({ data: { workspaceId, accountId: account.id, assetId: f.id } }); setAnswers((a) => ({ ...a, assetFiles: (a.assetFiles ?? []).filter((x) => x.id !== f.id) })); }); };
   const query = useQuery({ queryKey: ["ads-setup", workspaceId, accountId], queryFn: () => load({ data: { workspaceId, accountId } }), retry: false });

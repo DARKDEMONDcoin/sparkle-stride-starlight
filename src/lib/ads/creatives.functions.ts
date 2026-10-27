@@ -7,8 +7,9 @@ import { validateCopy } from "./intake";
 import { conceptCountRule } from "./experiments";
 import { googleCampaignType, googleCopyInstructions, validateGoogleVisualCopy } from "./google-campaigns";
 
-export type DraftCreative = { id: string; market: string; language: string; concept: string; hypothesis: string; headlines: string[]; longHeadlines?: string[]; descriptions: string[]; primary: string[]; cta: string | null; issues: string[]; status: "pending" | "approved" | "rejected"; aiGenerated: true; images?: CreativeImage[] };
+export type DraftCreative = { id: string; market: string; language: string; concept: string; hypothesis: string; headlines: string[]; longHeadlines?: string[]; descriptions: string[]; primary: string[]; cta: string | null; issues: string[]; status: "pending" | "approved" | "rejected"; aiGenerated: true; images?: CreativeImage[]; videos?: CreativeVideo[] };
 export type CreativeImage = { id: string; ratio: Ratio; path: string; status: "pending" | "approved" | "rejected"; aiGenerated: true; url?: string };
+export type CreativeVideo = { id: string; jobId: string; aspectRatio: "16:9" | "9:16"; durationSeconds: number; path?: string; status: "generating" | "pending" | "approved" | "rejected" | "failed"; error?: string; aiGenerated: true };
 export const RATIOS = { "1:1": { width: 1024, height: 1024 }, "4:5": { width: 896, height: 1120 }, "9:16": { width: 768, height: 1344 }, "16:9": { width: 1344, height: 768 }, "1.91:1": { width: 1528, height: 800 } } as const;
 export type Ratio = keyof typeof RATIOS;
 const str = z.string().trim().min(1).max(400);
@@ -103,6 +104,82 @@ export const decideCreativeImage = createServerFn({ method: "POST" }).middleware
     const image = list.find((c) => c.id === data.creativeId)?.images?.find((x) => x.id === data.imageId);
     if (!image || image.status !== "pending") throw new Error("تم اتخاذ قرار بالفعل.");
     image.status = data.decision === "approve" ? "approved" : "rejected";
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("campaign_drafts").update({ creatives: list as unknown as Json }).eq("id", draft.id).eq("status", "approved");
+    if (error) throw new Error("تعذّر حفظ القرار.");
+    return { saved: true };
+  });
+
+const videoAspect = z.enum(["16:9", "9:16"]);
+/** بدء توليد فيديو إعلاني لنص معتمد — مهمة غير متزامنة؛ الحالة تُستطلع عبر checkCreativeVideo. فيديو واحد قيد التوليد لكل نص. */
+export const generateCreativeVideo = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((i: unknown) => z.object({ workspaceId: z.string().uuid(), draftId: z.string().uuid(), creativeId: z.string().uuid(), aspectRatio: videoAspect, durationSeconds: z.union([z.literal(5), z.literal(8), z.literal(10)]), startImageId: z.string().uuid().optional() }).parse(i))
+  .handler(async ({ data, context }) => {
+    await verifiedWorkspace(context.supabase, context.userId, data.workspaceId);
+    const { draft, list } = await approvedDraft(context.supabase, data.workspaceId, data.draftId);
+    const item = list.find((c) => c.id === data.creativeId);
+    if (!item || item.status !== "approved") throw new Error("اعتمد النص أولاً قبل توليد فيديوه.");
+    const videos = item.videos ?? [];
+    if (videos.some((v) => v.status === "generating")) throw new Error("يوجد فيديو قيد التوليد لهذا النص؛ انتظر اكتماله.");
+    if (videos.filter((v) => v.status !== "failed").length >= 4) throw new Error("وصلت للحد الأقصى من الفيديوهات لهذا النص.");
+    let startImage: { dataBase64: string; mimeType: string } | undefined;
+    if (data.startImageId) {
+      const img = (item.images ?? []).find((x) => x.id === data.startImageId);
+      if (!img || img.status !== "approved") throw new Error("الإطار الأول يجب أن يكون صورة معتمدة من هذا النص.");
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const dl = await supabaseAdmin.storage.from("nour-media").download(img.path);
+      if (dl.error || !dl.data) throw new Error("تعذّر قراءة الصورة المختارة.");
+      const bytes = new Uint8Array(await dl.data.arrayBuffer());
+      let bin = ""; for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]!);
+      startImage = { dataBase64: btoa(bin), mimeType: "image/jpeg" };
+    }
+    const prompt = `Short advertising video for: ${item.concept}. Idea: ${item.hypothesis}. Market: ${item.market}. A single continuous shot, no scene cuts. Realistic, on-brand, clean composition with a clear focal subject. Slow, confident camera movement. Soft ambient music, no dialogue, no voiceover. No on-screen text, no letters, no logos, no third-party brands, no real identifiable people.`;
+    const { createVideoJob } = await import("./video-gen.server");
+    const job = await createVideoJob({ prompt, aspectRatio: data.aspectRatio, durationSeconds: data.durationSeconds, startImage });
+    const video: CreativeVideo = { id: crypto.randomUUID(), jobId: job.id, aspectRatio: data.aspectRatio, durationSeconds: data.durationSeconds, status: "generating", aiGenerated: true };
+    item.videos = [...videos, video];
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("campaign_drafts").update({ creatives: list as unknown as Json }).eq("id", draft.id).eq("status", "approved");
+    if (error) throw new Error("تعذّر حفظ مهمة الفيديو.");
+    return { id: video.id };
+  });
+
+/** استطلاع مهمة فيديو؛ عند اكتمالها يُنزَّل MP4 ويُخزَّن فوراً في التخزين الخاص (رابط البوابة قصير العمر). */
+export const checkCreativeVideo = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((i: unknown) => z.object({ workspaceId: z.string().uuid(), draftId: z.string().uuid(), creativeId: z.string().uuid(), videoId: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    await verifiedWorkspace(context.supabase, context.userId, data.workspaceId);
+    const { draft, list } = await approvedDraft(context.supabase, data.workspaceId, data.draftId);
+    const video = list.find((c) => c.id === data.creativeId)?.videos?.find((v) => v.id === data.videoId);
+    if (!video) throw new Error("الفيديو غير موجود.");
+    if (video.status !== "generating") return { status: video.status };
+    const { pollVideoJob, downloadVideo } = await import("./video-gen.server");
+    const job = await pollVideoJob(video.jobId);
+    if (job.status === "failed") {
+      video.status = "failed";
+      video.error = job.error?.code === "moderation_blocked" ? "حجبت مرشحات الأمان الفيديو أو الصورة المدخلة؛ جرّب وصفاً أو صورة مختلفة." : (job.error?.message ?? "فشل التوليد.");
+    } else if (job.status === "completed") {
+      const bytes = await downloadVideo(video.jobId);
+      const path = `${data.workspaceId}/ads/${draft.id}/${video.id}.mp4`;
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const up = await supabaseAdmin.storage.from("nour-media").upload(path, bytes, { contentType: "video/mp4" });
+      if (up.error) throw new Error("تعذّر حفظ الفيديو.");
+      video.path = path;
+      video.status = "pending";
+    } else {
+      return { status: "generating" as const };
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("campaign_drafts").update({ creatives: list as unknown as Json }).eq("id", draft.id).eq("status", "approved");
+    if (error) throw new Error("تعذّر حفظ حالة الفيديو.");
+    return { status: video.status };
+  });
+
+export const decideCreativeVideo = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((i: unknown) => z.object({ workspaceId: z.string().uuid(), draftId: z.string().uuid(), creativeId: z.string().uuid(), videoId: z.string().uuid(), decision: z.enum(["approve", "reject"]) }).parse(i))
+  .handler(async ({ data, context }) => {
+    await verifiedWorkspace(context.supabase, context.userId, data.workspaceId);
+    const { draft, list } = await approvedDraft(context.supabase, data.workspaceId, data.draftId);
+    const video = list.find((c) => c.id === data.creativeId)?.videos?.find((v) => v.id === data.videoId);
+    if (!video || video.status !== "pending") throw new Error("تم اتخاذ قرار بالفعل.");
+    video.status = data.decision === "approve" ? "approved" : "rejected";
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("campaign_drafts").update({ creatives: list as unknown as Json }).eq("id", draft.id).eq("status", "approved");
     if (error) throw new Error("تعذّر حفظ القرار.");
