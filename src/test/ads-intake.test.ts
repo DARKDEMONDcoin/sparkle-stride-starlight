@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allowableCpa, feasibility, missingRequired, validateCopy, specialAdCategories } from "@/lib/ads/intake";
+import { allowableCpa, feasibility, marketLanguages, missingRequired, validateCopy, specialAdCategories } from "@/lib/ads/intake";
 
 describe("Abdullah intake and feasibility", () => {
   it("has no preset country, language or currency: empty intake is incomplete", () => {
@@ -9,6 +9,13 @@ describe("Abdullah intake and feasibility", () => {
   it("requires a language for every market and the Facebook Page for Meta", () => {
     const m = missingRequired({ markets: ["Cairo", "Riyadh"], languages: { Cairo: "ar" } }, ["meta"]);
     expect(m).toContain("languages.Riyadh"); expect(m).toContain("metaPage"); expect(m).not.toContain("languages.Cairo");
+  });
+  it("accepts several languages per market and still treats the old single-string shape", () => {
+    expect(marketLanguages({ languages: { Cairo: ["ar", "en"] } }, "Cairo")).toEqual(["ar", "en"]);
+    expect(marketLanguages({ languages: { Cairo: "ar" } }, "Cairo")).toEqual(["ar"]);
+    const m = missingRequired({ markets: ["Cairo"], languages: { Cairo: ["ar", "en"] } }, ["google"]);
+    expect(m).not.toContain("languages.Cairo");
+    expect(missingRequired({ markets: ["Cairo"], languages: { Cairo: [] } }, ["google"])).toContain("languages.Cairo");
   });
   it("derives allowable CPA from unit economics", () => {
     expect(allowableCpa({ goal: "sales", aov: 200, margin: 0.5 })).toBe(100);
