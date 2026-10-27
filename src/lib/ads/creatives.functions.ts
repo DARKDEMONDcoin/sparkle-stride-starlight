@@ -7,8 +7,9 @@ import { validateCopy } from "./intake";
 import { conceptCountRule } from "./experiments";
 import { googleCampaignType, googleCopyInstructions, validateGoogleVisualCopy } from "./google-campaigns";
 
-export type DraftCreative = { id: string; market: string; language: string; concept: string; hypothesis: string; headlines: string[]; longHeadlines?: string[]; descriptions: string[]; primary: string[]; cta: string | null; issues: string[]; status: "pending" | "approved" | "rejected"; aiGenerated: true; images?: CreativeImage[] };
+export type DraftCreative = { id: string; market: string; language: string; concept: string; hypothesis: string; headlines: string[]; longHeadlines?: string[]; descriptions: string[]; primary: string[]; cta: string | null; issues: string[]; status: "pending" | "approved" | "rejected"; aiGenerated: true; images?: CreativeImage[]; videos?: CreativeVideo[] };
 export type CreativeImage = { id: string; ratio: Ratio; path: string; status: "pending" | "approved" | "rejected"; aiGenerated: true; url?: string };
+export type CreativeVideo = { id: string; jobId: string; aspectRatio: "16:9" | "9:16"; durationSeconds: number; path?: string; status: "generating" | "pending" | "approved" | "rejected" | "failed"; error?: string; aiGenerated: true };
 export const RATIOS = { "1:1": { width: 1024, height: 1024 }, "4:5": { width: 896, height: 1120 }, "9:16": { width: 768, height: 1344 }, "16:9": { width: 1344, height: 768 }, "1.91:1": { width: 1528, height: 800 } } as const;
 export type Ratio = keyof typeof RATIOS;
 const str = z.string().trim().min(1).max(400);
