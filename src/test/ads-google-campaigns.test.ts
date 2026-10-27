@@ -21,7 +21,7 @@ describe("Google asset checklist", () => {
   });
   it("accepts the older single-language market shape", () => {
     const markets = [{ market: "Cairo", language: "ar" }];
-    const c = googleAssetChecklist("demand_gen", { ...baseOptions, logoUrl: "https://example.com/logo.png", videoUrl: "https://example.com/v.mp4" }, [approvedCreative("Cairo", "ar")], markets);
+    const c = googleAssetChecklist("demand_gen", { ...baseOptions, logoUrl: "https://example.com/logo.png", videoUrl: "https://example.com/v.mp4" }, [approvedCreative("Cairo", "ar", false)], markets);
     expect(c.complete).toBe(true);
   });
   it("lets an uploaded logo and video satisfy the logo/video requirements without URLs", () => {
