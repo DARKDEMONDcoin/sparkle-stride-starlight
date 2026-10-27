@@ -135,7 +135,7 @@ export const generateCreativeVideo = createServerFn({ method: "POST" }).middlewa
     }
     const prompt = `Short advertising video for: ${item.concept}. Idea: ${item.hypothesis}. Market: ${item.market}. A single continuous shot, no scene cuts. Realistic, on-brand, clean composition with a clear focal subject. Slow, confident camera movement. Soft ambient music, no dialogue, no voiceover. No on-screen text, no letters, no logos, no third-party brands, no real identifiable people.`;
     const { createVideoJob } = await import("./video-gen.server");
-    const job = await createVideoJob({ prompt, aspectRatio: data.aspectRatio, durationSeconds: data.durationSeconds, startImage });
+    const job = await createVideoJob({ prompt, aspectRatio: data.aspectRatio, durationSeconds: data.durationSeconds, ...(startImage ? { startImage } : {}) });
     const video: CreativeVideo = { id: crypto.randomUUID(), jobId: job.id, aspectRatio: data.aspectRatio, durationSeconds: data.durationSeconds, status: "generating", aiGenerated: true };
     item.videos = [...videos, video];
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
