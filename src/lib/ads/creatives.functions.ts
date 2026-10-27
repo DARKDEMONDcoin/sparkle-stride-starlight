@@ -119,8 +119,9 @@ export const generateCreativeVideo = createServerFn({ method: "POST" }).middlewa
     const item = list.find((c) => c.id === data.creativeId);
     if (!item || item.status !== "approved") throw new Error("اعتمد النص أولاً قبل توليد فيديوه.");
     const videos = item.videos ?? [];
-    if (videos.some((v) => v.status === "generating")) throw new Error("يوجد فيديو قيد التوليد لهذا النص؛ انتظر اكتماله.");
-    if (videos.filter((v) => v.status !== "failed").length >= 4) throw new Error("وصلت للحد الأقصى من الفيديوهات لهذا النص.");
+    const { canStartVideo } = await import("./video-rules");
+    const gate = canStartVideo(videos);
+    if (!gate.ok) throw new Error(gate.reason);
     let startImage: { dataBase64: string; mimeType: string } | undefined;
     if (data.startImageId) {
       const img = (item.images ?? []).find((x) => x.id === data.startImageId);
