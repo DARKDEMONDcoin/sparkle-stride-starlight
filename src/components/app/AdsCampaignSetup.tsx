@@ -46,6 +46,16 @@ export function AdsCampaignSetup({ workspaceId }: { workspaceId: string }) {
   const query = useQuery({ queryKey: ["ads-setup", workspaceId, accountId], queryFn: () => load({ data: { workspaceId, accountId } }), retry: false });
   const data = query.data; const account = data?.account; const platform = (account?.platform === "meta" ? "meta" : "google") as "google" | "meta";
   const run = async (fn: () => Promise<unknown>) => { setBusy(true); setError(""); try { await fn(); await query.refetch(); } catch (e) { setError(e instanceof Error ? e.message : "تعذّر إكمال الطلب."); } finally { setBusy(false); } };
+  const generatingVideos = (data?.drafts ?? []).flatMap((d) => ((Array.isArray(d.creatives) ? d.creatives : []) as unknown as DraftCreative[]).flatMap((c) => (c.videos ?? []).filter((v) => v.status === "generating").map((v) => ({ draftId: d.id, creativeId: c.id, videoId: v.id }))));
+  const generatingKey = generatingVideos.map((g) => g.videoId).join(",");
+  useEffect(() => {
+    if (!generatingKey) return;
+    const t = setInterval(() => {
+      void Promise.all(generatingKey.split(",").map((videoId) => { const g = generatingVideos.find((x) => x.videoId === videoId); return g ? checkVid({ data: { workspaceId, ...g } }).catch(() => null) : null; })).then(() => query.refetch());
+    }, 8000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [generatingKey]);
   const openWizard = () => { setAnswers((data?.profile?.answers ?? {}) as IntakeAnswers); setSummary(data?.profile?.site_summary ?? ""); setStep(1); setOpen(true); };
   const set = (k: keyof IntakeAnswers, v: unknown) => setAnswers((a) => ({ ...a, [k]: v }));
   const missing = missingRequired(answers, [platform]); const calc = allowableCpa(answers); const feas = feasibility(answers, [platform]); const issues = contradictions(answers);
