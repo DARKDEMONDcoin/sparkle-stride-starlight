@@ -30,7 +30,7 @@ export const getAdsSetup = createServerFn({ method: "POST" }).middleware([requir
       context.supabase.from("campaign_drafts").select("id,platform,campaign_type,status,spec,lessons_from_history,creatives,created_at,decided_at").eq("workspace_id", data.workspaceId).eq("ad_account_id", account.id).eq("employee_id", "abdullah").order("created_at", { ascending: false }).limit(30),
     ]);
     const assetPaths = (((profile?.answers ?? {}) as IntakeAnswers).assetFiles ?? []).map((f) => f.path);
-    const paths = [...(drafts ?? []).flatMap((d) => (Array.isArray(d.creatives) ? d.creatives : []).flatMap((c) => ((c as { images?: { path: string }[] }).images ?? []).map((i) => i.path))), ...assetPaths].filter((p) => p.startsWith(`${data.workspaceId}/ads/`));
+    const paths = [...(drafts ?? []).flatMap((d) => (Array.isArray(d.creatives) ? d.creatives : []).flatMap((c) => [...((c as { images?: { path: string }[] }).images ?? []).map((i) => i.path), ...((c as { videos?: { path?: string }[] }).videos ?? []).flatMap((v) => (v.path ? [v.path] : []))])), ...assetPaths].filter((p) => p.startsWith(`${data.workspaceId}/ads/`));
     const urls: Record<string, string> = {};
     if (paths.length) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
