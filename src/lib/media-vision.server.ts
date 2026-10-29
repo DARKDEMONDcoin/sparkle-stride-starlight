@@ -99,7 +99,7 @@ export async function readScannedPdf(bytes: Uint8Array, name: string): Promise<s
   let read = "";
   if (keys.lovable) read = await callVision(LOVABLE, keys.lovable, MEDIA_MODEL, parts).catch(() => "");
   if (!read && keys.gemini)
-    read = await callVision(GEMINI, keys.gemini, "gemini-2.5-flash-lite", parts).catch(() => "");
+    read = await callVision(GEMINI, keys.gemini, "gemini-3.5-flash-lite", parts).catch(() => "");
   return read;
 }
 
@@ -148,7 +148,7 @@ async function readOneFile(
       if (keys.lovable)
         read = await callVision(LOVABLE, keys.lovable, MEDIA_MODEL, parts).catch(() => "");
       if (!read && keys.gemini)
-        read = await callVision(GEMINI, keys.gemini, "gemini-2.5-flash-lite", parts).catch(() => "");
+        read = await callVision(GEMINI, keys.gemini, "gemini-3.5-flash-lite", parts).catch(() => "");
       if (read) return `ملف ${index + 1} (${name}) — ما استخرجناه منه:\n${read}`;
       return `ملف ${index + 1} (${name}): تعذّرت قراءة محتواه الآن.`;
     }
@@ -207,7 +207,7 @@ export async function describeUserMedia(attachments: Attachment[]): Promise<stri
       described = await callVision(LOVABLE, keys.lovable, MEDIA_MODEL, parts).catch(() => "");
     }
     if (!described && keys.gemini) {
-      described = await callVision(GEMINI, keys.gemini, "gemini-2.5-flash-lite", parts).catch(
+      described = await callVision(GEMINI, keys.gemini, "gemini-3.5-flash-lite", parts).catch(
         () => "",
       );
     }

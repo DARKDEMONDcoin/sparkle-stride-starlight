@@ -26,28 +26,20 @@ const GEMINI = "https://generativelanguage.googleapis.com/v1beta/openai/chat/com
 const LOVABLE = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
 /** نماذج بوابة Lovable المدمجة (لا تحتاج مفتاحاً من المستخدم) — الأقوى أولاً ثم الاحتياطي. */
-export const LOVABLE_MODELS = ["openai/gpt-5.6-sol", "google/gemini-3.8-flash"];
+export const LOVABLE_MODELS = ["openai/gpt-6-astra", "google/gemini-3.8-flash"];
 
-/** عائلة GPT-5 ترفض max_tokens وتحتاج مهلة أطول؛ حدّ الطول يُذكر في التعليمات بدلاً منه. */
-const isGpt5 = (model: string) => /(^|\/)gpt-5/.test(model);
+/** عائلة GPT-5/GPT-6 ترفض max_tokens وتحتاج مهلة أطول؛ حدّ الطول يُذكر في التعليمات بدلاً منه. */
+const isGpt5 = (model: string) => /(^|\/)gpt-[56]/.test(model);
 
 /**
- * خدمة الأولوية على بوابة Lovable: زمن استجابة أقل لنماذج gpt-5.6 —
+ * خدمة الأولوية على بوابة Lovable: زمن استجابة أقل لنماذج GPT —
  * تُطلب فقط على بوابة Lovable ومع هذه النماذج، وتُتجاهل تلقائياً إن لم تكن متاحة.
  */
 const priorityFields = (endpoint: string, model: string) =>
   endpoint === LOVABLE && isGpt5(model) ? { service_tier: "priority" as const } : {};
 
-/** نماذج Google AI Studio (المزوّد الأساسي) بالترتيب. */
-// flash-lite أولاً: يردّ في ~7 ثوانٍ بجودة قريبة، بينما 3.6-flash يتجاوز 50 ثانية
-// ويُقطع بمهلة الطلب (30 ثانية) فيُهدر الوقت قبل الاحتياطي.
-export const GEMINI_MODELS = [
-  "gemini-2.5-flash-lite",
-  "gemini-2.5-flash",
-  "gemini-2.0-flash",
-  "gemini-3.5-flash-lite",
-  "gemini-3.6-flash",
-];
+/** نماذج Google AI Studio (المزوّد الأساسي) بالترتيب — أُلغيت أجيال 2.0 و2.5. */
+export const GEMINI_MODELS = ["gemini-3.5-flash-lite", "gemini-3.6-flash"];
 
 /**
  * أفضل النماذج المجانية على OpenRouter بترتيب مُختبَر (جودة عربية + سرعة + توافر)،
