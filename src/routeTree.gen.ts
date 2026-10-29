@@ -39,6 +39,7 @@ import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppApprovalsRouteImport } from './routes/app.approvals'
 import { Route as AppAutomationsRouteImport } from './routes/app.automations'
 import { Route as AppAutopilotRouteImport } from './routes/app.autopilot'
+import { Route as AppBacklinksRouteImport } from './routes/app.backlinks'
 import { Route as AppBrainRouteImport } from './routes/app.brain'
 import { Route as AppBrowserRouteImport } from './routes/app.browser'
 import { Route as AppCalendarRouteImport } from './routes/app.calendar'
@@ -245,6 +246,11 @@ const AppAutomationsRoute = AppAutomationsRouteImport.update({
 const AppAutopilotRoute = AppAutopilotRouteImport.update({
   id: '/autopilot',
   path: '/autopilot',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppBacklinksRoute = AppBacklinksRouteImport.update({
+  id: '/backlinks',
+  path: '/backlinks',
   getParentRoute: () => AppRoute,
 } as any)
 const AppBrainRoute = AppBrainRouteImport.update({
@@ -569,6 +575,7 @@ export interface FileRoutesByFullPath {
   '/app/approvals': typeof AppApprovalsRoute
   '/app/automations': typeof AppAutomationsRoute
   '/app/autopilot': typeof AppAutopilotRoute
+  '/app/backlinks': typeof AppBacklinksRoute
   '/app/brain': typeof AppBrainRoute
   '/app/browser': typeof AppBrowserRoute
   '/app/calendar': typeof AppCalendarRoute
@@ -657,6 +664,7 @@ export interface FileRoutesByTo {
   '/app/approvals': typeof AppApprovalsRoute
   '/app/automations': typeof AppAutomationsRoute
   '/app/autopilot': typeof AppAutopilotRoute
+  '/app/backlinks': typeof AppBacklinksRoute
   '/app/brain': typeof AppBrainRoute
   '/app/browser': typeof AppBrowserRoute
   '/app/calendar': typeof AppCalendarRoute
@@ -746,6 +754,7 @@ export interface FileRoutesById {
   '/app/approvals': typeof AppApprovalsRoute
   '/app/automations': typeof AppAutomationsRoute
   '/app/autopilot': typeof AppAutopilotRoute
+  '/app/backlinks': typeof AppBacklinksRoute
   '/app/brain': typeof AppBrainRoute
   '/app/browser': typeof AppBrowserRoute
   '/app/calendar': typeof AppCalendarRoute
@@ -837,6 +846,7 @@ export interface FileRouteTypes {
     | '/app/approvals'
     | '/app/automations'
     | '/app/autopilot'
+    | '/app/backlinks'
     | '/app/brain'
     | '/app/browser'
     | '/app/calendar'
@@ -925,6 +935,7 @@ export interface FileRouteTypes {
     | '/app/approvals'
     | '/app/automations'
     | '/app/autopilot'
+    | '/app/backlinks'
     | '/app/brain'
     | '/app/browser'
     | '/app/calendar'
@@ -1013,6 +1024,7 @@ export interface FileRouteTypes {
     | '/app/approvals'
     | '/app/automations'
     | '/app/autopilot'
+    | '/app/backlinks'
     | '/app/brain'
     | '/app/browser'
     | '/app/calendar'
@@ -1338,6 +1350,13 @@ declare module '@tanstack/react-router' {
       path: '/autopilot'
       fullPath: '/app/autopilot'
       preLoaderRoute: typeof AppAutopilotRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/backlinks': {
+      id: '/app/backlinks'
+      path: '/backlinks'
+      fullPath: '/app/backlinks'
+      preLoaderRoute: typeof AppBacklinksRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/brain': {
@@ -1759,6 +1778,7 @@ interface AppRouteChildren {
   AppApprovalsRoute: typeof AppApprovalsRoute
   AppAutomationsRoute: typeof AppAutomationsRoute
   AppAutopilotRoute: typeof AppAutopilotRoute
+  AppBacklinksRoute: typeof AppBacklinksRoute
   AppBrainRoute: typeof AppBrainRoute
   AppBrowserRoute: typeof AppBrowserRoute
   AppCalendarRoute: typeof AppCalendarRoute
@@ -1795,6 +1815,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppApprovalsRoute: AppApprovalsRoute,
   AppAutomationsRoute: AppAutomationsRoute,
   AppAutopilotRoute: AppAutopilotRoute,
+  AppBacklinksRoute: AppBacklinksRoute,
   AppBrainRoute: AppBrainRoute,
   AppBrowserRoute: AppBrowserRoute,
   AppCalendarRoute: AppCalendarRoute,
