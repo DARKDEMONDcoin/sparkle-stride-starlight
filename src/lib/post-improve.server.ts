@@ -156,7 +156,80 @@ async function readResponsesStream(res: Response): Promise<string> {
   return (text.trim() || reasoningFallback.trim()).trim();
 }
 
+/** محرّك الكتابة الإبداعية: Claude Sonnet 5 عبر واجهة Messages الأصلية (متدفّقة). */
+export const COPY_MODEL = "anthropic/claude-sonnet-5";
+
+export async function callSonnetCopy(messages: ChatMessage[]): Promise<string> {
+  const { usableLovableKey } = await import("./ai-key-health.server");
+  const key = await usableLovableKey();
+  if (!key) throw new Error("إعداد Lovable AI غير مكتمل.");
+  const system = messages.filter((m) => m.role === "system").map((m) => m.content).join("\n\n");
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, "X-Lovable-AIG-SDK": "fetch" },
+    body: JSON.stringify({
+      model: COPY_MODEL,
+      max_tokens: 16000,
+      stream: true,
+      ...(system ? { system } : {}),
+      messages: messages.filter((m) => m.role !== "system").map((m) => ({ role: m.role, content: m.content })),
+    }),
+  });
+  if (!res.ok || !res.body) {
+    const raw = await res.text().catch(() => "");
+    throw new Error(userFacingGatewayError(res.status, raw));
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let text = "";
+  let refused = false;
+  const consume = (line: string) => {
+    const t = line.trim();
+    if (!t.startsWith("data:")) return;
+    try {
+      const p = JSON.parse(t.slice(5).trim()) as { type?: string; delta?: { type?: string; text?: string; stop_reason?: string }; error?: { message?: string } };
+      if (p.type === "content_block_delta" && p.delta?.type === "text_delta" && p.delta.text) text += p.delta.text;
+      if (p.type === "message_delta" && p.delta?.stop_reason === "refusal") refused = true;
+      if (p.type === "error") throw new Error(p.error?.message ?? "Claude error");
+    } catch (e) {
+      if (e instanceof Error && e.message !== "" && !(e instanceof SyntaxError)) throw e;
+    }
+  };
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    lines.forEach(consume);
+  }
+  if (buffer) consume(buffer);
+  if (refused) throw new Error("رفض النموذج هذا الطلب.");
+  if (!text.trim()) throw new Error("رد فارغ من Claude.");
+  return text.trim();
+}
+
+/** كتابة المحتوى والإعلانات: Sonnet 5 أولاً، ثم سلسلة الموظفين المشتركة. */
+export async function copyChat(
+  messages: ChatMessage[],
+  options: import("./nour-research.server").ChatOptions = {},
+): Promise<string> {
+  try {
+    return await callSonnetCopy(messages);
+  } catch (error) {
+    console.warn("[copy] sonnet failed, falling back:", error instanceof Error ? error.message : error);
+    const { freeChat } = await import("./nour-research.server");
+    return freeChat("copy", messages, options);
+  }
+}
+
 export async function callLovableRewrite(messages: ChatMessage[]): Promise<string> {
+  try {
+    return await callSonnetCopy(messages);
+  } catch (sonnetError) {
+    console.warn("[post-improve] sonnet failed:", sonnetError instanceof Error ? sonnetError.message : sonnetError);
+  }
   try {
     return await callGatewayRewrite(messages);
   } catch (error) {
