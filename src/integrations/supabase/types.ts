@@ -976,6 +976,56 @@ export type Database = {
           },
         ]
       }
+      backlink_submissions: {
+        Row: {
+          created_at: string
+          directory_id: string
+          id: string
+          listing_url: string | null
+          live_checked_at: string | null
+          live_ok: boolean | null
+          notes: string | null
+          pack: Json | null
+          status: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          directory_id: string
+          id?: string
+          listing_url?: string | null
+          live_checked_at?: string | null
+          live_ok?: boolean | null
+          notes?: string | null
+          pack?: Json | null
+          status?: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          directory_id?: string
+          id?: string
+          listing_url?: string | null
+          live_checked_at?: string | null
+          live_ok?: boolean | null
+          notes?: string | null
+          pack?: Json | null
+          status?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "backlink_submissions_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brain_items: {
         Row: {
           body: string | null
