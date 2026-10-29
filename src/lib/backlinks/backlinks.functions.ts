@@ -91,8 +91,8 @@ export const updateBacklink = createServerFn({ method: "POST" })
     // "live" is only set by the verification check, never by hand.
     const status = data.status === "live" ? "submitted" : data.status;
     const row: Record<string, unknown> = { workspace_id: data.workspaceId, directory_id: data.directoryId };
-    if (status) row.status = status;
-    if (data.listingUrl !== undefined) row.listing_url = data.listingUrl;
+    if (status) row["status"] = status;
+    if (data.listingUrl !== undefined) row["listing_url"] = data.listingUrl;
     const { error } = await context.supabase.from("backlink_submissions" as never)
       .upsert(row as never, { onConflict: "workspace_id,directory_id" });
     if (error) throw new Error(error.message);
