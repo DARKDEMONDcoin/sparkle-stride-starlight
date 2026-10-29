@@ -46,7 +46,7 @@ function linksFor(kind: OutputKind): QuickLink[] {
     case "email": return [{ to: "/app/inbox-watch", label: "راجع البريد والإرسال", icon: Send }];
     case "event": return [{ to: "/app/tasks", label: "المهام والمواعيد", icon: CalendarDays }];
     case "article": return [{ to: "/app/reports", label: "أداء المحتوى", icon: LineChart }];
-    case "seo": return [{ to: "/app/rankings", label: "تتبّع الكلمات", icon: LineChart }, { to: "/app/reports", label: "تقرير السيو", icon: LineChart }];
+    case "seo": return [{ to: "/app/rankings", label: "تتبّع الكلمات", icon: LineChart }, { to: "/app/backlinks", label: "الروابط الخلفية", icon: LineChart }, { to: "/app/reports", label: "تقرير السيو", icon: LineChart }];
     case "leads": return [{ to: "/app/proposals", label: "العروض", icon: Sparkles }, { to: "/app/approvals", label: "اعتمد التواصل", icon: ListChecks }];
     case "plan": return [{ to: "/app/calendar", label: "انقلها للتقويم", icon: CalendarDays }, { to: "/app/team-tasks", label: "وزّعها على الفريق", icon: Users }];
     case "report": return [{ to: "/app/reports", label: "افتح التقرير", icon: LineChart }];
