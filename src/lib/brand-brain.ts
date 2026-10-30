@@ -22,7 +22,7 @@ export type BrandSection = { data: BrandData; detected?: BrandData; suggestions?
 export type BrandSections = Partial<Record<BrandSectionKey, BrandSection>>;
 export type ScanStage = { state: "waiting" | "running" | "done" | "failed"; line?: string; error?: string; summary?: BrandData };
 export type BrandJob = { id: string; workspace_id: string; website: string; status: string; stage: number; stages: ScanStage[]; sources: string[]; error: string | null; error_status: number | null; updated_at: string; lease_until?: string | null };
-export type BrandSnapshot = { website: string; revision: number; sections: BrandSections; history: unknown[]; job: BrandJob | null };
+export type BrandSnapshot = { website: string; revision: number; sections: BrandSections; history: BrandSections[]; job: BrandJob | null };
 export const emptySection = (key: BrandSectionKey): BrandData => Object.fromEntries(Object.keys(sectionSchemas[key].shape).map((field) => [field, ["services", "markets", "usp", "segments", "regions", "needs", "painPoints", "attributes", "dos", "donts", "examples", "colors", "fonts"].includes(field) ? [] : ""]));
 export function brandCompleteness(sections: BrandSections) {
   return Math.round(brandStages.filter(({ key }) => Object.values(sections[key]?.data ?? {}).some((v) => typeof v === "string" ? v.trim() : v.length)).length * 25);
