@@ -5067,6 +5067,10 @@ export type Database = {
         }
         Returns: string
       }
+      brand_owner_call: {
+        Args: { _operation: string; _owner: string; _payload: Json }
+        Returns: Json
+      }
       brand_retry: { Args: { _job: string }; Returns: boolean }
       brand_save_section: {
         Args: {
