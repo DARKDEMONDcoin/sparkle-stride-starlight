@@ -23,7 +23,7 @@ describe("onboarding objectives", () => {
   it("invalid answers fall back to defaults and unknown employees are dropped", () => {
     const r = buildOnboarding({ general: { traffic: { target: "", horizon: "3m" } }, employees: ["nour", "ghost"], employeeObjectives: { nour: ["rank"] }, answers: { nour: { articles: "999" } } });
     expect(r.employees).toEqual(["nour"]);
-    expect(r.answers.nour!.articles).toBe("4");
+    expect(r.answers["nour"]!["articles"]).toBe("4");
     expect(r.objectives.find((o) => o.id === "traffic")!.target).toBe("10000");
   });
   it("employee prompt shows general goals and only that employee's goals", () => {
