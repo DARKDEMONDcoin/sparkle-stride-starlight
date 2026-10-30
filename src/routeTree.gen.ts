@@ -58,6 +58,7 @@ import { Route as AppRankingsRouteImport } from './routes/app.rankings'
 import { Route as AppReferralRouteImport } from './routes/app.referral'
 import { Route as AppReportsRouteImport } from './routes/app.reports'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
+import { Route as AppSetupRouteImport } from './routes/app.setup'
 import { Route as AppTasksRouteImport } from './routes/app.tasks'
 import { Route as AppTeamTasksRouteImport } from './routes/app.team-tasks'
 import { Route as AppTrustRouteImport } from './routes/app.trust'
@@ -346,6 +347,11 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSetupRoute = AppSetupRouteImport.update({
+  id: '/setup',
+  path: '/setup',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppTasksRoute = AppTasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
@@ -612,6 +618,7 @@ export interface FileRoutesByFullPath {
   '/app/referral': typeof AppReferralRoute
   '/app/reports': typeof AppReportsRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/setup': typeof AppSetupRoute
   '/app/tasks': typeof AppTasksRoute
   '/app/team-tasks': typeof AppTeamTasksRoute
   '/app/trust': typeof AppTrustRoute
@@ -703,6 +710,7 @@ export interface FileRoutesByTo {
   '/app/referral': typeof AppReferralRoute
   '/app/reports': typeof AppReportsRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/setup': typeof AppSetupRoute
   '/app/tasks': typeof AppTasksRoute
   '/app/team-tasks': typeof AppTeamTasksRoute
   '/app/trust': typeof AppTrustRoute
@@ -797,6 +805,7 @@ export interface FileRoutesById {
   '/app/referral': typeof AppReferralRoute
   '/app/reports': typeof AppReportsRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/setup': typeof AppSetupRoute
   '/app/tasks': typeof AppTasksRoute
   '/app/team-tasks': typeof AppTeamTasksRoute
   '/app/trust': typeof AppTrustRoute
@@ -892,6 +901,7 @@ export interface FileRouteTypes {
     | '/app/referral'
     | '/app/reports'
     | '/app/settings'
+    | '/app/setup'
     | '/app/tasks'
     | '/app/team-tasks'
     | '/app/trust'
@@ -983,6 +993,7 @@ export interface FileRouteTypes {
     | '/app/referral'
     | '/app/reports'
     | '/app/settings'
+    | '/app/setup'
     | '/app/tasks'
     | '/app/team-tasks'
     | '/app/trust'
@@ -1076,6 +1087,7 @@ export interface FileRouteTypes {
     | '/app/referral'
     | '/app/reports'
     | '/app/settings'
+    | '/app/setup'
     | '/app/tasks'
     | '/app/team-tasks'
     | '/app/trust'
@@ -1523,6 +1535,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/setup': {
+      id: '/app/setup'
+      path: '/setup'
+      fullPath: '/app/setup'
+      preLoaderRoute: typeof AppSetupRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/tasks': {
       id: '/app/tasks'
       path: '/tasks'
@@ -1856,6 +1875,7 @@ interface AppRouteChildren {
   AppReferralRoute: typeof AppReferralRoute
   AppReportsRoute: typeof AppReportsRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppSetupRoute: typeof AppSetupRoute
   AppTasksRoute: typeof AppTasksRoute
   AppTeamTasksRoute: typeof AppTeamTasksRoute
   AppTrustRoute: typeof AppTrustRoute
@@ -1894,6 +1914,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppReferralRoute: AppReferralRoute,
   AppReportsRoute: AppReportsRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppSetupRoute: AppSetupRoute,
   AppTasksRoute: AppTasksRoute,
   AppTeamTasksRoute: AppTeamTasksRoute,
   AppTrustRoute: AppTrustRoute,
