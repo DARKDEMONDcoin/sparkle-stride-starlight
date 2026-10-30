@@ -52,11 +52,12 @@ export async function createBaselineReview(client: Client, workspaceId: string, 
   return { baselineId: baseline.id, jobId: job.id };
 }
 /** Until step 5 adds structured evidence-grounded generation, return only deterministic reviewed evidence. */
-export async function abdullahEvidenceReply(client: Client, workspaceId: string): Promise<string> {
+export async function abdullahEvidenceReply(client: Client, workspaceId: string, language: "en" | "ar" | "auto" = "ar"): Promise<string> {
+  const english = language === "en";
   const { data: accounts, error } = await client.from("ad_accounts").select("id,name,external_id").eq("workspace_id", workspaceId).limit(2);
   if (error) throw new Error("تعذّر التحقق من بيانات الحساب؛ لن أقدّم توصيات دون أدلة.");
-  if (!accounts?.length) return "لا يوجد حساب إعلاني محفوظ في هذه المساحة، وربط Pipeboard متوقف. لن أقدّم توصيات أو مسودات حملات بلا بيانات موثقة. هل لديك تقارير سابقة أو بيانات متجر أو CRM يمكن مراجعتها؟";
-  if (accounts.length > 1) return "توجد عدة حسابات إعلانية. حدّد الحساب الذي تريد مراجعته في صفحة أساس الحساب؛ لن أختار حساباً أو أقدّم توصيات تلقائياً.";
+  if (!accounts?.length) return english ? "No ad account is saved in this workspace, and Pipeboard connectivity is on hold. I cannot provide recommendations or campaign drafts without verified data. Do you have historical reports, store data or CRM records we can review?" : "لا يوجد حساب إعلاني محفوظ في هذه المساحة، وربط Pipeboard متوقف. لن أقدّم توصيات أو مسودات حملات بلا بيانات موثقة. هل لديك تقارير سابقة أو بيانات متجر أو CRM يمكن مراجعتها؟";
+  if (accounts.length > 1) return english ? "There are multiple ad accounts. Select the account to review on the Account baseline page; I will not choose an account or provide recommendations automatically." : "توجد عدة حسابات إعلانية. حدّد الحساب الذي تريد مراجعته في صفحة أساس الحساب؛ لن أختار حساباً أو أقدّم توصيات تلقائياً.";
   const account = accounts[0];
   if (!account) throw new Error("الحساب غير متاح.");
   const { data: baseline, error: baselineError } = await client.from("account_baselines").select("status,limitations,context_questions,data_quality").eq("workspace_id", workspaceId).eq("ad_account_id", account.id).order("created_at", { ascending: false }).limit(1).maybeSingle();
@@ -66,6 +67,10 @@ export async function abdullahEvidenceReply(client: Client, workspaceId: string)
   const questions = strings(baseline?.context_questions);
   const { data: recommendations, error: recError } = await client.from("recommendations").select("title,rationale,status,success_metric,review_after_date").eq("workspace_id", workspaceId).eq("ad_account_id", account.id).eq("employee_id", "abdullah").order("created_at", { ascending: false }).limit(3);
   if (recError) throw new Error("تعذّر قراءة التوصيات المحفوظة.");
+  if (english) {
+    const saved = (recommendations ?? []).map((rec) => `Saved proposal — ${rec.title}\n${rec.rationale}\nStatus: ${rec.status} · Success metric: ${rec.success_metric ?? "Not specified"} · Review: ${rec.review_after_date ?? "Not specified"}\nThis is a historical record, not a new recommendation or confirmation that it can be executed.`);
+    return [`I am reviewing your account: ${account.name ?? account.external_id}.`, "Reviewing cached data does not establish complete evidence. I cannot provide recommendations, changes or campaign drafts until verified review is complete.", "Start or check the saved-data review on the Account baseline page. Any saved evidence below is quoted in its original language, not reinterpreted.", ...(limitations.success ? limitations.data.slice(0, 4) : []), ...saved, ...(questions.success ? questions.data.slice(0, 5) : [])].join("\n\n");
+  }
   const saved = (recommendations ?? []).map((rec) => `مقترح محفوظ — ${rec.title}\n${rec.rationale}\nالحالة: ${rec.status} · مقياس النجاح: ${rec.success_metric ?? "غير محدد"} · المراجعة: ${rec.review_after_date ?? "غير محددة"}\nهذا عرض لسجل سابق، وليس توصية جديدة أو تأكيداً لصلاحية تنفيذه.`);
   return [`جارٍ تعلّم حسابك: ${account.name ?? account.external_id}.`, "مراجعة البيانات المحفوظة لا تعني اكتمال الأدلة؛ لن أقدّم توصيات أو تغييرات أو مسودات حملات حتى تكتمل المراجعة الموثقة.", ...(limitations.success ? limitations.data.slice(0, 4) : ["ابدأ مراجعة البيانات المحفوظة في صفحة أساس الحساب."]), ...saved, ...(questions.success ? questions.data.slice(0, 5) : [...CONTEXT_QUESTIONS])].join("\n\n");
 }
