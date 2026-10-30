@@ -9,11 +9,13 @@
 - [x] صفحة التكاملات الموحدة ورابط /chat/siraj (يحوّل للمعرّف الدائم).
 # Roadmap
 ## Brand Brain — 30 October
-- [ ] Persist four sequential website-analysis stages, bounded public crawl, sources, retries, partial results and protected user edits.
-- [ ] Add Arabic RTL Brand Brain editor, palette/contrast/preview, autosave/undo, per-field rescan suggestions and manual entry.
-- [ ] Connect welcome/dashboard triggers, durable progress/sidebar state and shared employee context respecting existing opt-outs.
-- [ ] Use real-name employee URL slugs with permanent legacy redirects while preserving internal IDs.
-- [ ] Run focused rule tests, verify desktop/375px UI and document data/background flow and external verification blockers.
+- [x] Implement four sequential persisted stages, bounded public crawl, sources, explicit recovery, partial findings and protected user edits.
+- [x] Add Arabic RTL Brand Brain editor, palette/contrast/preview, serialized autosave/undo, per-field suggestions and manual entry/logo upload extraction.
+- [x] Connect welcome/dashboard triggers, durable progress/sidebar state and employee context respecting existing opt-outs.
+- [x] Use human-name employee URL slugs with permanent legacy redirects while preserving internal IDs.
+- [x] 17 focused tests passed; real SDK business analysis returned validated fictional results; public desktop/375px UI, redirects and auth boundary checked. Flow documented in docs/qa/brand-brain-flow.md.
+- [ ] Production callback deployment and authenticated complete scan/save/readback: blocked by no deployment request and unavailable external Supabase test session.
+- [ ] Automatic logo/main-image palette extraction: not yet implemented; declared CSS palette and uploaded-logo extraction work independently.
 ## Adam reporting — 30 October
 - [x] Replace Adam’s Calendar with Reporting in both menus; preserve other employees.
 - [x] Show workspace connected-source inventory, real GA4/Search Console metrics, 7/28/90-day selection, report fetch timestamp and honest unavailable states; use provider aggregate totals, aligned periods and exact date-filtered task counts.
