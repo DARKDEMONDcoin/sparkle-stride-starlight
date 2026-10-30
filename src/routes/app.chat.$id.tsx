@@ -1367,7 +1367,7 @@ function ChatView({
             </Button>
             {member.id === "adam" ? <Button type="button" variant="ghost" size="sm" className="chat-nav-button" aria-label="التقارير" title="التقارير" onClick={() => void navigate({ to: "/app/reports" })}>
               <LayoutDashboard className="size-4" /><span>التقارير</span>
-            </Button> : <Button type="button" variant="ghost" size="sm" className="chat-nav-button" aria-label="التقويم" title="التقويم" onClick={() => void navigate({ to: "/app/calendar", search: { employee: employeeCalendarSlug(member.id) } })}>
+            </Button> : member.id === "abdullah" ? null : <Button type="button" variant="ghost" size="sm" className="chat-nav-button" aria-label="التقويم" title="التقويم" onClick={() => void navigate({ to: "/app/calendar", search: { employee: employeeCalendarSlug(member.id) } })}>
               <CalendarDays className="size-4" /><span>التقويم</span>
             </Button>}
             <Button type="button" variant="ghost" size="sm" className="chat-nav-button" aria-label="التعليمات" title="تعليمات الموظف" onClick={() => void navigate({ to: "/app/guidelines/$id", params: { id: employeeSlug(member.id) } })}>
