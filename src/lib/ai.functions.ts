@@ -31,6 +31,7 @@ import { planTurn, turnPlanBlock } from "@/lib/turn-plan";
 import { composeChatOutputs } from "./chat-outputs";
 import { mediaBuyerGuidelines } from "./ads/guidelines";
 import { buildMediaBuyerPrompt } from "./ads/prompts/media-buyer.v1";
+import { replyLanguage, replyLanguageBlock } from "./reply-language";
 
 type Deliverable = {
   title?: string;
@@ -467,7 +468,7 @@ export async function runEmployeeTurn(
     // Step 5 will replace this read-only report path with structured, validated recommendations.
     if (data.employeeId === "abdullah" && planTurn(data.message).intent !== "smalltalk") {
       const { abdullahEvidenceReply } = await import("./ads/baseline.server");
-      const reply = await abdullahEvidenceReply(supabase, data.workspaceId);
+      const reply = await abdullahEvidenceReply(supabase, data.workspaceId, replyLanguage(data.message));
       emit({ type: "step", label: "أتحقق من أدلة الحساب قبل أي توصية" });
       emit({ type: "delta", text: reply });
       const { data: assistant, error } = await supabase.from("messages").insert({ workspace_id: data.workspaceId, employee_id: data.employeeId, conversation_id: data.conversationId, role: "assistant", body: reply, outputs: [] }).select("id").single();
@@ -1096,7 +1097,7 @@ export async function runEmployeeTurn(
       "## أسلوب المحادثة",
       "فكّر داخلياً بالترتيب: افهم الهدف، تحقق من الأدلة، اختر الإجراء، ثم سلّم النتيجة. لا تعرض خطوات تفكيرك.",
       "راجع الإجابة قبل تسليمها: الدقة، الاكتمال، ملاءمة السوق العربي، صدق ما تم تنفيذه، وخطوة تالية واحدة.",
-      "أجب دائماً بالعربية. التحية والأسئلة القصيرة: رد قصير ودافئ بجملة أو اثنتين بلا إضافات لم تُطلب. طلبات العمل: مخرج كامل جاهز مباشرة.",
+      "اتبع لغة رسالة المستخدم الحالية في المحادثة. التحية والأسئلة القصيرة: رد قصير ودافئ بجملة أو اثنتين بلا إضافات لم تُطلب. طلبات العمل: مخرج كامل جاهز مباشرة.",
       "## تنسيق الرد (إلزامي)",
       // العناوين والقوائم والجداول تخص مخرج العمل وحده: سياسة الرد تمنعها في
       // الدردشة والسؤال، فحقنها بلا شرط كان أمرين متناقضين في نفس التعليمات.
@@ -1131,12 +1132,12 @@ export async function runEmployeeTurn(
             "## طلب صورة صريح (إلزامي في هذه الرسالة)",
             "المستخدم طلب صورة/تصميماً فعلياً. الصورة **ستُولَّد وتُعرض له تحت ردك تلقائياً** من الحقل image_prompt.",
             "اكتب في image_prompt وصفاً إنجليزياً واحداً غنياً وقابلاً للتنفيذ (الموضوع، الأسلوب، التكوين، الإضاءة، الألوان، الخلفية، نسبة الأبعاد، وأي نص يظهر داخل الصورة إن طلبه) بما يطابق طلبه ونبرة العلامة.",
-            "ردّك النصي يبقى قصيراً: سطر يقول ما الذي صُمِّم ولماذا هذه الزاوية، وسطر «نص بديل:» بالعربية. ممنوع تماماً أن تكتب للمستخدم أنك «لا تستطيع توليد الصور» أو أن تعطيه البرومبت الإنجليزي في النص أو أن تصف الصورة في فقرات طويلة بدل توليدها.",
-            'إن لم يكن هناك منشور مطلوب فاجعل "deliverable" هكذا: {"title": "عنوان الصورة", "kind": "صورة", "channel": null, "body": "سطر عربي واحد يصف ما تظهره الصورة", "scheduled": null, "image_prompt": "…English prompt…"}.',
+            "ردّك النصي يبقى قصيراً بلغة المستخدم: سطر يقول ما الذي صُمِّم ولماذا هذه الزاوية، وسطر نص بديل. ممنوع تماماً أن تكتب للمستخدم أنك «لا تستطيع توليد الصور» أو أن تعطيه البرومبت الإنجليزي في النص أو أن تصف الصورة في فقرات طويلة بدل توليدها.",
+            'إن لم يكن هناك منشور مطلوب فاجعل "deliverable" هكذا: {"title": "عنوان الصورة بلغة المستخدم", "kind": "صورة", "channel": null, "body": "سطر واحد بلغة المستخدم يصف ما تظهره الصورة", "scheduled": null, "image_prompt": "…English prompt…"}.',
           ].join("\n")
         : "",
       'أعد ردك بصيغة JSON فقط بالشكل: {"reply": "نص ردك للمستخدم بصيغة Markdown", "deliverable": {"title": "عنوان المخرج", "kind": "نوع المخرج", "channel": "المنصة", "body": "نص المخرج الجاهز", "scheduled": "متى يُنفّذ", "image_prompt": "English visual prompt or null"} , "needs_connection": {"provider": "معرّف المنصة مثل instagram أو wordpress أو search-console", "reason": "سبب من 8 كلمات مرتبط بهذه المهمة"}, "action": {"id": "معرّف إجراء من القائمة أعلاه", "values": {"اسم الحقل": "قيمته الجاهزة"}} }',
-      'ممنوع تماماً ابتكار بنية JSON أخرى. إن طلب المستخدم عدة مخرجات (خطة أسبوع، عدة منشورات، عدة منصات) فاستخدم مصفوفة "deliverables": [ {نفس حقول deliverable}, … ] بدل deliverable، واجعل "reply" ملخصاً بالعربية للخطة (المحاور، التوزيع، مؤشرات القياس) — ولا تضع JSON داخل reply أو داخل body إطلاقاً.',
+      'ممنوع تماماً ابتكار بنية JSON أخرى. إن طلب المستخدم عدة مخرجات (خطة أسبوع، عدة منشورات، عدة منصات) فاستخدم مصفوفة "deliverables": [ {نفس حقول deliverable}, … ] بدل deliverable، واجعل "reply" ملخصاً بلغة المستخدم للخطة (المحاور، التوزيع، مؤشرات القياس) — ولا تضع JSON داخل reply أو داخل body إطلاقاً.',
       "قاعدة إلزامية للخطط: عنصر واحد في deliverables لكل منشور فعلي (يوم × منصة). خطة 3 أيام على 3 منصات = 9 عناصر، لكل عنصر channel صحيح (instagram / linkedin / x) وtitle يذكر اليوم والمنصة وbody يحتوي نص ذلك المنشور وحده مع هاشتاجاته وscheduled بأفضل وقت نشر. ممنوع وضع ملخص الخطة داخل body أو الاكتفاء بمخرج واحد.",
       "حقل body يجب أن يكون نص المنشور/المقال الجاهز للنشر كما يقرأه الجمهور فقط — بلا مفاتيح ولا أقواس ولا وصف الصورة. ووصف الصورة الإنجليزي يوضع في image_prompt وحده ولا يظهر للمستخدم.",
       'إن لم يطلب المستخدم مخرجاً جاهزاً للنشر أو الإرسال، اجعل "deliverable" القيمة null. واجعل "needs_connection" القيمة null إلا إذا كانت هذه المهمة تحديداً تحتاج حساباً غير مربوط لتنفيذها فعلياً (نشر/إرسال/قراءة بيانات حقيقية).',
@@ -1148,6 +1149,7 @@ export async function runEmployeeTurn(
       .filter(Boolean)
       .join("\n");
 
+    const localizedSystem = `${system}\n\n${replyLanguageBlock(data.message)}`;
     const priorMessages = (history ?? [])
       .slice()
       .reverse()
@@ -1213,7 +1215,7 @@ export async function runEmployeeTurn(
       try {
         const { isCampaignRequest, generateCampaign } = await import("./campaign-plan.server");
         if (isCampaignRequest(data.message, askedTargets)) {
-          campaign = await generateCampaign(apiKey, system, data.message, askedTargets);
+          campaign = await generateCampaign(apiKey, localizedSystem, data.message, askedTargets);
         }
       } catch (error) {
         console.warn("[campaign] failed:", error instanceof Error ? error.message : error);
@@ -1225,10 +1227,10 @@ export async function runEmployeeTurn(
       try {
         const { isLongArticleRequest, generateLongArticle } = await import("./longform.server");
         if (isLongArticleRequest(data.message)) {
-          const article = await generateLongArticle(apiKey, system, data.message);
+          const article = await generateLongArticle(apiKey, localizedSystem, data.message);
           if (article) {
             campaign = {
-              reply: `جهّزت لك المقال كاملاً: **${article.title}** — نصه الكامل بالأسفل، ومعه الميتا والأسئلة الشائعة وسكيما FAQ جاهزة.`,
+              reply: replyLanguage(data.message) === "en" ? `Your complete article is ready: **${article.title}** — including metadata, frequently asked questions and FAQ schema below.` : `جهّزت لك المقال كاملاً: **${article.title}** — نصه الكامل بالأسفل، ومعه الميتا والأسئلة الشائعة وسكيما FAQ جاهزة.`,
               deliverables: [
                 { title: article.title, kind: "مقال", channel: "wordpress", body: article.body },
               ],
@@ -1243,7 +1245,7 @@ export async function runEmployeeTurn(
     if (!quickTurn) emit({ type: "step", label: `${persona.name} ${longForm ? "يكتب المخرج الكامل" : "يكتب مسودتك"}…` });
 
     const chatMessages = [
-      { role: "system", content: system },
+      { role: "system", content: localizedSystem },
       ...priorMessages,
       { role: "user", content: userTurn },
     ];
@@ -1579,7 +1581,7 @@ export async function runEmployeeTurn(
           await freeChat(
             apiKey,
             [
-              { role: "system", content: system },
+              { role: "system", content: localizedSystem },
               { role: "user", content: data.message },
               {
                 role: "user",
