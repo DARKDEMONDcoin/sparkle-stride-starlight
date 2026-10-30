@@ -1,0 +1,4 @@
+import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
+import { getMember } from "@/data/team";
+import { employeeSlug } from "@/lib/employee-slugs";
+export const Route = createFileRoute("/chat/$id")({ beforeLoad: ({ params }) => { const member = getMember(params.id); if (!member) throw notFound(); throw redirect({ to: "/app/chat/$id", params: { id: employeeSlug(member.id) }, statusCode: 301, replace: true }); }, head: () => ({ meta: [{ title: "محادثة فريق زياد" }, { name: "description", content: "انتقل إلى محادثة موظفك في زياد." }, { property: "og:title", content: "محادثة فريق زياد" }, { property: "og:description", content: "محادثة موظفك الرقمي في زياد." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }) });

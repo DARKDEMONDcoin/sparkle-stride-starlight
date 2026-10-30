@@ -277,7 +277,7 @@ function OnboardingChecklist({ workspaceId, hasWebsite, connected, requested, re
   const [dismissed, setDismissed] = useState(true);
   useEffect(() => { try { setDismissed(localStorage.getItem(key) === "1"); } catch { setDismissed(false); } }, [key]);
   const items = [
-    { label: "أضف موقعك", done: hasWebsite },
+    { label: "أضف موقعك", done: hasWebsite, to: "/app/brand" as const },
     { label: "اربط منصة", done: connected, to: "/app/integrations" as const },
     { label: "اطلب أول عمل", done: requested },
     { label: "راجع أول مسودة", done: reviewed, to: "/app/approvals" as const },

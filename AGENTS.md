@@ -38,7 +38,8 @@
 - Referrals: scoped Ziad styling; preserve codes, verified payments and refund maturity; no user-written earnings.
 - Feedback/support: private RLS.
 - Settings use router search.
-- Employee IDs: permanent (DB/URLs).
+- Employee IDs remain permanent in data; URL slugs use employee-slugs.ts with legacy permanent redirects. Why: real names in navigation without rewriting stored conversations.
+- Brand Brain uses owner-verified server operations, per-field edit protection and four leased event-driven stages; workspace.profile.brandBrain mirrors accepted data into existing employee context. Why: durable scans and shared context without replacing existing memory or bypassing opt-outs.
 - Adam reporting reuses /app/reports and inventories workspace connections separately from implemented metric feeds; report totals come from provider aggregate requests with a shared explicit date window. Why: connection labels and top-row sums cannot establish complete business performance.
 - Brand references stay bounded/private and sanitized; why: protect sources.
 - Brand extraction uses safe schemas; competitor-research ranks direct substitutes with literal buyer/offer proof from both sites. Why: precision.
