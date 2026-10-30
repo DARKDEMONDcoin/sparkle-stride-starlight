@@ -8,6 +8,12 @@
 - [x] المراحل ٣–٦ وأجزاء من ٧ (التقويم، الكوكيز، صورة الشات، رابط الأسعار الهادئ).
 - [x] صفحة التكاملات الموحدة ورابط /chat/siraj (يحوّل للمعرّف الدائم).
 # Roadmap
+## Brand Brain — 30 October
+- [ ] Persist four sequential website-analysis stages, bounded public crawl, sources, retries, partial results and protected user edits.
+- [ ] Add Arabic RTL Brand Brain editor, palette/contrast/preview, autosave/undo, per-field rescan suggestions and manual entry.
+- [ ] Connect welcome/dashboard triggers, durable progress/sidebar state and shared employee context respecting existing opt-outs.
+- [ ] Use real-name employee URL slugs with permanent legacy redirects while preserving internal IDs.
+- [ ] Run focused rule tests, verify desktop/375px UI and document data/background flow and external verification blockers.
 ## Adam reporting — 30 October
 - [x] Replace Adam’s Calendar with Reporting in both menus; preserve other employees.
 - [x] Show workspace connected-source inventory, real GA4/Search Console metrics, 7/28/90-day selection, report fetch timestamp and honest unavailable states; use provider aggregate totals, aligned periods and exact date-filtered task counts.
