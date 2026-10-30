@@ -70,7 +70,7 @@ export function EmployeeTopbar({
         </Button>
         {member.id === "adam" ? <Button type="button" variant="ghost" size="sm" className={cn("chat-nav-button", active === "reports" && "is-active")} aria-label="التقارير" title="التقارير" onClick={() => void navigate({ to: "/app/reports" })}>
           <ChartNoAxesCombined className="size-4" /><span>التقارير</span>
-        </Button> : <Button
+        </Button> : member.id === "abdullah" ? null : <Button
           type="button"
           variant="ghost"
           size="sm"
