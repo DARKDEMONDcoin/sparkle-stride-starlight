@@ -48659,3 +48659,20 @@ html body .sahl-trust .sahl-trust-row > span { flex: initial !important; max-wid
 .welcome-team-card { display: flex; gap: .8rem; align-items: stretch; border: 1px solid var(--border); border-radius: 1.1rem; background: var(--card); padding: .75rem; }
 .welcome-team-photo { width: 6.5rem; min-height: 7rem; flex-shrink: 0; border-radius: .8rem; object-fit: cover; overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { .welcome-purpose-card { transition: none; } }
+
+/* Sign-up redesign: website, industry, plan, ready */
+.welcome-website .welcome-url-form { width: min(100%, 34rem); padding: .4rem; border: 1px solid var(--border); border-radius: 1rem; background: var(--card); box-shadow: 0 12px 30px -18px color-mix(in oklab, var(--primary) 45%, transparent); }
+.welcome-website .welcome-url-form .welcome-input { border: 0; border-radius: .75rem; background: var(--muted); font-size: 1rem; height: 3rem; }
+.welcome-scan-progress { border-radius: 999px; padding: .4rem .9rem; background: var(--accent); color: var(--foreground); font-weight: 700; }
+.welcome-industry { border-radius: 999px; padding-inline: .9rem; font-weight: 600; transition: background-color .2s, border-color .2s; }
+.welcome-industry:hover { border-color: color-mix(in oklab, var(--primary) 50%, var(--border)); }
+.welcome-industry-active { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+.welcome-recommend-actions > div { border-radius: 1rem; border-top-width: 1px; border-inline-start: 3px solid var(--primary); box-shadow: 0 10px 24px -20px color-mix(in oklab, var(--foreground) 40%, transparent); }
+.welcome-recommend-number { display: inline-grid; place-items: center; width: 1.7rem; height: 1.7rem; border-radius: 999px; background: var(--accent); }
+.welcome-first-move { border-radius: 1rem; border: 1px dashed color-mix(in oklab, var(--primary) 45%, transparent); }
+.welcome-team { grid-template-columns: repeat(7, minmax(0, 1fr)); width: min(100%, 40rem); gap: .6rem; }
+.welcome-team > div { display: flex; flex-direction: column; align-items: center; gap: .35rem; padding: .6rem .3rem; border: 1px solid var(--border); border-radius: 1rem; background: var(--card); font-size: .72rem; font-weight: 700; }
+.welcome-team > div img { width: 3rem; height: 3rem; box-shadow: 0 0 0 3px var(--background), 0 0 0 5px color-mix(in oklab, var(--primary) 35%, transparent); }
+.welcome-signup { border-radius: 999px; box-shadow: 0 14px 30px -16px color-mix(in oklab, var(--primary) 70%, transparent); }
+@media (max-width: 767px) { .welcome-team { grid-template-columns: repeat(4, minmax(0, 1fr)); } .welcome-team > div img { width: 2.3rem; height: 2.3rem; } }
+@media (prefers-reduced-motion: reduce) { .welcome-industry { transition: none; } }
