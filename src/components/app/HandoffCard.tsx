@@ -1,3 +1,4 @@
+import { employeeSlug } from "@/lib/employee-slugs";
 import { Link } from "@tanstack/react-router";
 import { ArrowUpLeft } from "lucide-react";
 
@@ -29,7 +30,7 @@ export function HandoffCard({
       </span>
       <Link
         to="/app/chat/$id"
-        params={{ id: handoff.id }}
+        params={{ id: employeeSlug(handoff.id) }}
         search={{ prompt: request.slice(0, 4000) }}
         className="col-span-2 inline-flex min-h-10 max-w-full whitespace-normal shrink-0 items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-xs font-bold text-background transition-transform hover:-translate-y-0.5"
       >

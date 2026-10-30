@@ -1,3 +1,4 @@
+import { employeeSlug } from "@/lib/employee-slugs";
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
@@ -327,7 +328,7 @@ function ReportView({ report }: { report: DiscoveryReport }) {
                 <Link
                   key={a.title}
                   to="/app/chat/$id"
-                  params={{ id: a.employeeId }}
+                  params={{ id: employeeSlug(a.employeeId) }}
                   search={{ prompt: a.prompt }}
                   className="group flex items-start gap-3 rounded-2xl border border-border p-4 transition-colors hover:bg-secondary/60"
                 >

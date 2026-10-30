@@ -1,3 +1,4 @@
+import { employeeSlug } from "@/lib/employee-slugs";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -124,7 +125,7 @@ function ProposalsPage() {
                   {member ? (
                     <Link
                       to="/app/chat/$id"
-                      params={{ id: member.id }}
+                      params={{ id: employeeSlug(member.id) }}
                       className="flex items-center gap-1.5 text-[0.7rem] font-bold text-muted-foreground hover:text-foreground"
                     >
                       <span className="block size-5 overflow-hidden rounded-md">

@@ -206,7 +206,7 @@ export function MorningBriefingCard({
                     <li key={i.title}>
                       <Link
                         to="/app/chat/$id"
-                        params={{ id: "sonny" }}
+                        params={{ id: "siraj" }}
                         search={{ prompt: i.prompt }}
                         className="group block rounded-xl border border-border/40 bg-secondary/30 px-3 py-2 text-xs text-foreground transition-colors hover:bg-background/12"
                       >

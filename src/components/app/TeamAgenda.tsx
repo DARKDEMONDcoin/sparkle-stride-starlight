@@ -1,3 +1,4 @@
+import { employeeSlug } from "@/lib/employee-slugs";
 import { Link } from "@tanstack/react-router";
 import { CalendarClock, CheckSquare, ExternalLink, FileText, Repeat, Users, X } from "lucide-react";
 
@@ -46,7 +47,7 @@ export function AgendaChip({ item, onOpen }: { item: AgendaItem; onOpen?: (i: Ag
       </button>
     );
   return (
-    <Link to="/app/chat/$id" params={{ id: item.employeeId }} title={item.title} className={cls}>
+    <Link to="/app/chat/$id" params={{ id: employeeSlug(item.employeeId) }} title={item.title} className={cls}>
       {inner}
     </Link>
   );
@@ -112,7 +113,7 @@ export function AgendaItemDialog({ item, onClose }: { item: AgendaItem; onClose:
           ) : null}
           <Link
             to="/app/chat/$id"
-            params={{ id: item.employeeId }}
+            params={{ id: employeeSlug(item.employeeId) }}
             className="rounded-xl border border-border px-4 py-2.5 text-sm font-bold hover:bg-secondary"
           >
             {item.kind === "meeting" ? `جهّزني لهذا الموعد يا ${m?.name}` : item.kind === "cadence" ? `عدّل هذه الدورة مع ${m?.name}` : `اطلب تعديلاً من ${m?.name}`}

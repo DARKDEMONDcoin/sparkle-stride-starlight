@@ -1,3 +1,4 @@
+import { employeeSlug } from "@/lib/employee-slugs";
 import { useState } from "react";
 import { PersonAvatar } from "@/components/app/PersonAvatar";
 import { Link } from "@tanstack/react-router";
@@ -212,7 +213,7 @@ function TaskDetail({ task, people, onClose, onChanged }: { task: WorkItem; peop
         </div>
         {task.ai_employee_id ? <div className="mt-3 flex flex-wrap items-center gap-2">
           <Button size="sm" onClick={() => execute.mutate()} disabled={running} className="gap-1.5">{running ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}{running ? `${getMember(task.ai_employee_id)?.name ?? "الموظف"} يعمل على المهمة…` : task.ai_output ? "أعد التنفيذ" : `نفّذها مع ${getMember(task.ai_employee_id)?.name ?? "الموظف"}`}</Button>
-          <Button size="sm" variant="outline" asChild><Link to="/app/chat/$id" params={{ id: task.ai_employee_id }} search={{ prompt: `بخصوص مهمة الفريق «${task.title}»:\n` } as never}><MessageSquare className="size-4" /> ناقشها في المحادثة</Link></Button>
+          <Button size="sm" variant="outline" asChild><Link to="/app/chat/$id" params={{ id: employeeSlug(task.ai_employee_id) }} search={{ prompt: `بخصوص مهمة الفريق «${task.title}»:\n` } as never}><MessageSquare className="size-4" /> ناقشها في المحادثة</Link></Button>
           {task.ai_status === "failed" && !running && <span className="text-xs font-bold text-destructive">تعذّر التنفيذ في المحاولة الأخيرة.</span>}
         </div> : <p className="mt-2 text-xs text-muted-foreground">اختر موظفاً رقمياً لينفّذ المهمة ويضع نتيجتها هنا ليراجعها الفريق.</p>}
       </div>

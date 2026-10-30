@@ -1,3 +1,4 @@
+import { employeeSlug } from "@/lib/employee-slugs";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -287,7 +288,7 @@ export function BusinessProfileCard({
                     <Link
                       key={`${t.employeeId}-${t.title}`}
                       to="/app/chat/$id"
-                      params={{ id: t.employeeId }}
+                      params={{ id: employeeSlug(t.employeeId) }}
                       search={{ prompt: t.prompt }}
                       className="group flex items-center gap-3 rounded-2xl border border-border p-3 text-start transition-colors hover:bg-secondary/60"
                     >

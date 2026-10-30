@@ -1,3 +1,4 @@
+import { employeeSlug } from "@/lib/employee-slugs";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, Check, X } from "lucide-react";
 
@@ -195,7 +196,7 @@ function UseCasePage() {
                 <Reveal key={m.id} delay={i * 50}>
                   <Link
                     to="/employees/$id"
-                    params={{ id: m.id }}
+                    params={{ id: employeeSlug(m.id) }}
                     className="flex h-full items-start gap-3 rounded-2xl border border-border bg-card p-5 transition-transform duration-300 hover:-translate-y-1"
                   >
                     <span
