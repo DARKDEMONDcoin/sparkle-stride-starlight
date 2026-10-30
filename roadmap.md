@@ -9,9 +9,10 @@
 - [x] صفحة التكاملات الموحدة ورابط /chat/siraj (يحوّل للمعرّف الدائم).
 # Roadmap
 ## Adam reporting — 30 October
-- [ ] Replace Adam’s Calendar with Reporting in both menus; preserve other employees.
-- [ ] Show workspace connected-source inventory, real GA4/Search Console metrics, period selection, source timestamps and honest unavailable states; correct report aggregates and task labels.
-- [ ] Run focused accuracy tests and check preview; authenticated/provider verification depends on an available customer session.
+- [x] Replace Adam’s Calendar with Reporting in both menus; preserve other employees.
+- [x] Show workspace connected-source inventory, real GA4/Search Console metrics, 7/28/90-day selection, report fetch timestamp and honest unavailable states; use provider aggregate totals, aligned periods and exact date-filtered task counts.
+- [x] Eight focused accuracy/access tests pass; latest preview build OK. Signed-out browser redirects to sign-in without runtime errors. Not published.
+- [ ] Authenticated reporting/provider readback: blocked by external unmanaged Supabase without a test session. Additional CRM/commerce/ad metric feeds need implemented, verified reporting adapters; connections alone are inventoried, never treated as report evidence.
 ## Revised Media Buyer specification — 23 October
 - [x] October 26 replacement-spec review: compared full 521-line attachment, current code and live schema; all specified tables have RLS, evidence/draft triggers inspected, six playbook sections match verbatim, 172 focused tests plus 6 guardrail tests pass. No application code or database changes.
 - [x] Replacement-spec step 1 confirmation: owner approved closing step 1 gaps and retaining the existing authenticated server layer; no new Edge Functions. Updated documentation and added positive owner/admin preference/version handler tests; 18 focused checks passed. No application behavior/database changes or deployment. Details: docs/qa/media-buyer-step-1-verification.md.
