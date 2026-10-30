@@ -3,6 +3,7 @@ import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { reportRange, type ReportRange } from "./report-rules";
 
 export type SearchConsoleConfig = {
   refreshToken?: string;
@@ -143,6 +144,7 @@ export type GscRow = {
 export type GscSnapshot = {
   site: string;
   range: { start: string; end: string };
+  totals?: Omit<GscRow, "key">;
   queries: GscRow[];
   pages: GscRow[];
 };
@@ -155,13 +157,14 @@ export async function hasGoogleAccount(
   provider: "search-console" | "analytics",
 ) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from("pipedream_accounts")
     .select("id")
     .eq("workspace_id", workspaceId)
     .eq("provider", provider)
     .eq("status", "connected")
     .maybeSingle();
+  if (error) throw new Error(error.message);
   return Boolean(data);
 }
 
@@ -172,6 +175,7 @@ export async function hasGoogleAccount(
 export async function gscSnapshotDetailed(
   workspaceId: string,
   days = 28,
+  requestedRange?: ReportRange,
 ): Promise<{ status: SourceStatus; snapshot: GscSnapshot | null }> {
   try {
     if (!(await hasGoogleAccount(workspaceId, "search-console"))) {
@@ -195,8 +199,10 @@ export async function gscSnapshotDetailed(
       };
     }
     const { googleDataRequest } = await import("./google-data.server");
-    const end = new Date(Date.now() - 3 * 86_400_000).toISOString().slice(0, 10);
-    const start = new Date(Date.now() - (days + 3) * 86_400_000).toISOString().slice(0, 10);
+    const siteUrl = config.siteUrl;
+    const { siteEntry = [] } = await googleDataRequest<{ siteEntry?: { siteUrl: string; permissionLevel?: string }[] }>(workspaceId, "search-console", "https://searchconsole.googleapis.com/webmasters/v3/sites");
+    if (!siteEntry.some(s => s.siteUrl === siteUrl && s.permissionLevel !== "siteUnverifiedUser")) throw new Error("403: الموقع المختار لم يعد متاحاً للحساب المربوط.");
+    const { start, end } = requestedRange ?? reportRange(days);
 
     const query = async (dimension: "query" | "page"): Promise<GscRow[]> => {
       const { rows = [] } = await googleDataRequest<{
@@ -210,7 +216,7 @@ export async function gscSnapshotDetailed(
       }>(
         workspaceId,
         "search-console",
-        `https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(config.siteUrl!)}/searchAnalytics/query`,
+        `https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`,
         {
           method: "POST",
           body: { startDate: start, endDate: end, dimensions: [dimension], rowLimit: 25 },
@@ -225,10 +231,11 @@ export async function gscSnapshotDetailed(
       }));
     };
 
-    const [queries, pages] = await Promise.all([query("query"), query("page")]);
+    const [queries, pages, aggregate] = await Promise.all([query("query"), query("page"), googleDataRequest<{ rows?: Omit<GscRow, "key">[] }>(workspaceId, "search-console", `https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`, { method: "POST", body: { startDate: start, endDate: end, rowLimit: 1 } })]);
+    const totals = aggregate.rows?.[0] ?? { clicks: 0, impressions: 0, ctr: 0, position: 0 };
     return {
       status: { state: "ok", message: `Search Console · ${config.siteUrl}` },
-      snapshot: { site: config.siteUrl, range: { start, end }, queries, pages },
+      snapshot: { site: siteUrl, range: { start, end }, totals, queries, pages },
     };
   } catch (e) {
     const raw = e instanceof Error ? e.message : String(e);

@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { connectedReportSources, reportRange } from "./report-rules";
 
 /**
  * تقرير سيو شهري قابل للطباعة: يجمع بيانات Search Console وGA4 الحقيقية
@@ -9,6 +10,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  */
 
 export type ReportPayload = {
+  fetchedAt: string;
+  connectedSources: ReturnType<typeof connectedReportSources>;
   workspace: { name: string; industry: string };
   range: { start: string; end: string } | null;
   search: {
@@ -23,7 +26,7 @@ export type ReportPayload = {
     channels: { channel: string; sessions: number }[];
     organicLandingPages: { page: string; sessions: number }[];
   } | null;
-  work: { published: number; awaiting: number; recent: { title: string; created_at: string }[] };
+  work: { published: number | null; awaiting: number | null; recent: { title: string; created_at: string }[] };
   opportunities: { query: string; reason: string }[];
   notes: string[];
   sources: {
@@ -47,20 +50,32 @@ export const buildReport = createServerFn({ method: "POST" })
       .maybeSingle();
     if (wsError) throw new Error(wsError.message);
     if (!workspace) throw new Error("مساحة العمل غير موجودة.");
+    const { data: owns, error: ownerError } = await context.supabase.rpc("owns_workspace", { _workspace_id: data.workspaceId });
+    if (ownerError) throw new Error(ownerError.message);
+    if (owns !== true) throw new Error("Forbidden: تقارير الحسابات متاحة لمالك مساحة العمل فقط.");
 
     const { gscSnapshotDetailed } = await import("./gsc.functions");
     const { ga4SnapshotDetailed } = await import("./ga4.functions");
 
-    const [gscRes, ga4Res, tasks] = await Promise.all([
-      gscSnapshotDetailed(data.workspaceId, data.days),
-      ga4SnapshotDetailed(data.workspaceId, data.days),
+    const range = reportRange(data.days);
+    const [gscRes, ga4Res, tasks, integrations, accounts, done, review] = await Promise.all([
+      gscSnapshotDetailed(data.workspaceId, data.days, range),
+      ga4SnapshotDetailed(data.workspaceId, data.days, range),
       context.supabase
         .from("tasks")
         .select("title, status, created_at")
         .eq("workspace_id", data.workspaceId)
+        .gte("created_at", `${range.start}T00:00:00Z`)
+        .lt("created_at", `${range.end}T23:59:59.999Z`)
         .order("created_at", { ascending: false })
-        .limit(40),
+        .limit(10),
+      context.supabase.from("integrations").select("provider, status, account").eq("workspace_id", data.workspaceId),
+      context.supabase.from("pipedream_accounts").select("provider, status, account_name").eq("workspace_id", data.workspaceId),
+      context.supabase.from("tasks").select("id", { count: "exact", head: true }).eq("workspace_id", data.workspaceId).eq("status", "done").gte("created_at", `${range.start}T00:00:00Z`).lt("created_at", `${range.end}T23:59:59.999Z`),
+      context.supabase.from("tasks").select("id", { count: "exact", head: true }).eq("workspace_id", data.workspaceId).eq("status", "review").gte("created_at", `${range.start}T00:00:00Z`).lt("created_at", `${range.end}T23:59:59.999Z`),
     ]);
+    if (integrations.error) throw new Error(integrations.error.message);
+    if (accounts.error) throw new Error(accounts.error.message);
     const gsc = gscRes.snapshot;
     const ga4 = ga4Res.snapshot;
 
@@ -68,22 +83,8 @@ export const buildReport = createServerFn({ method: "POST" })
     const notes: string[] = [];
     if (gscRes.status.state !== "ok") notes.push(gscRes.status.message);
     if (ga4Res.status.state !== "ok") notes.push(ga4Res.status.message);
-
-    const totals = gsc
-      ? gsc.queries.reduce(
-          (acc, r) => ({
-            clicks: acc.clicks + r.clicks,
-            impressions: acc.impressions + r.impressions,
-            ctr: 0,
-            position: acc.position + r.position,
-          }),
-          { clicks: 0, impressions: 0, ctr: 0, position: 0 },
-        )
-      : null;
-    if (totals && gsc) {
-      totals.ctr = totals.impressions ? totals.clicks / totals.impressions : 0;
-      totals.position = gsc.queries.length ? totals.position / gsc.queries.length : 0;
-    }
+    if (tasks.error || done.error || review.error) notes.push("تعذّر تحميل بعض بيانات مهام مساحة العمل.");
+    const totals = gsc?.totals ?? null;
 
     // فرص حقيقية مبنية على أرقام Search Console فقط
     const opportunities = (gsc?.queries ?? [])
@@ -95,8 +96,10 @@ export const buildReport = createServerFn({ method: "POST" })
       }));
 
     return {
+      fetchedAt: new Date().toISOString(),
+      connectedSources: connectedReportSources([...(integrations.data ?? []), ...(accounts.data ?? []).map(a => ({ provider: a.provider, status: a.status, account: a.account_name }))]),
       workspace: { name: workspace.name, industry: workspace.industry },
-      range: gsc?.range ?? ga4?.range ?? null,
+      range,
       search:
         gsc && totals
           ? {
@@ -115,8 +118,8 @@ export const buildReport = createServerFn({ method: "POST" })
           }
         : null,
       work: {
-        published: rows.filter((t) => t.status === "done").length,
-        awaiting: rows.filter((t) => t.status === "review").length,
+        published: done.error ? null : done.count,
+        awaiting: review.error ? null : review.count,
         recent: rows.slice(0, 10).map((t) => ({ title: t.title, created_at: t.created_at })),
       },
       opportunities,
