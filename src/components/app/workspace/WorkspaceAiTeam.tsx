@@ -1,3 +1,4 @@
+import { employeeSlug } from "@/lib/employee-slugs";
 import { Link } from "@tanstack/react-router";
 import { MessageCircle } from "lucide-react";
 import { Portrait } from "@/components/site/Portrait";
@@ -32,7 +33,7 @@ export function WorkspaceAiTeam({ tasks, spaceName }: { tasks: WorkItem[]; space
           <p className="mt-3 text-xs leading-6 text-muted-foreground">{SPECIALTY[m.id]}</p>
           <div className="mt-auto flex items-center justify-between gap-2 pt-4">
             <span className="text-xs font-bold text-muted-foreground">{assigned ? `${assigned} مهمة مفتوحة` : "متاح الآن"}</span>
-            <Button size="sm" variant="outline" asChild><Link to="/app/chat/$id" params={{ id: m.id }}><MessageCircle className="size-4" /> محادثة</Link></Button>
+            <Button size="sm" variant="outline" asChild><Link to="/app/chat/$id" params={{ id: employeeSlug(m.id) }}><MessageCircle className="size-4" /> محادثة</Link></Button>
           </div>
         </div>;
       })}

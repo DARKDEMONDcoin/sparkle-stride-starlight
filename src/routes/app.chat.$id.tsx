@@ -42,7 +42,7 @@ import { AppIcon, appLabel } from "@/components/site/AppIcon";
 import { ConnectNow } from "@/components/app/ConnectNow";
 import { InlineApproval } from "@/components/app/InlineApproval";
 import { getMember } from "@/data/team";
-import { employeeSlug } from "@/lib/employee-slugs";
+import { employeeCalendarSlug, employeeSlug } from "@/lib/employee-slugs";
 import {
   useEmployeeConversation,
   useIntegrations,
@@ -1367,7 +1367,7 @@ function ChatView({
             </Button>
             {member.id === "adam" ? <Button type="button" variant="ghost" size="sm" className="chat-nav-button" aria-label="التقارير" title="التقارير" onClick={() => void navigate({ to: "/app/reports" })}>
               <LayoutDashboard className="size-4" /><span>التقارير</span>
-            </Button> : <Button type="button" variant="ghost" size="sm" className="chat-nav-button" aria-label="التقويم" title="التقويم" onClick={() => void navigate({ to: "/app/calendar", search: { employee: employeeSlug(member.id) as "siraj" } })}>
+            </Button> : <Button type="button" variant="ghost" size="sm" className="chat-nav-button" aria-label="التقويم" title="التقويم" onClick={() => void navigate({ to: "/app/calendar", search: { employee: employeeCalendarSlug(member.id) } })}>
               <CalendarDays className="size-4" /><span>التقويم</span>
             </Button>}
             <Button type="button" variant="ghost" size="sm" className="chat-nav-button" aria-label="التعليمات" title="تعليمات الموظف" onClick={() => void navigate({ to: "/app/guidelines/$id", params: { id: employeeSlug(member.id) } })}>

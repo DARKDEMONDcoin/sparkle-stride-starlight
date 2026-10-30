@@ -1,3 +1,4 @@
+import { employeeSlug } from "@/lib/employee-slugs";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, Bot, CalendarClock, Clock3, Gavel, Lightbulb, ListChecks, Send, Workflow, CheckCircle2, Inbox, Loader2, MessageCircle, Sparkles, Users } from "lucide-react";
 
@@ -56,7 +57,7 @@ export function WorkspaceToday({ tasks, projects, people, meId, ownWorkspaceId, 
           <p className="mt-1 text-sm text-muted-foreground">اختر موظفاً واطلب منه ما تحتاجه بلغتك — أو أنشئ مشروعاً من قالب جاهز.</p>
           <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6">
             {team.slice(0, 6).map((m) => (
-              <Link key={m.id} to="/app/chat/$id" params={{ id: m.id }} className="flex flex-col items-center gap-1.5 rounded-xl p-2 text-center transition-colors hover:bg-background">
+              <Link key={m.id} to="/app/chat/$id" params={{ id: employeeSlug(m.id) }} className="flex flex-col items-center gap-1.5 rounded-xl p-2 text-center transition-colors hover:bg-background">
                 <span className="block size-11 overflow-hidden rounded-full"><Portrait memberId={m.id} name={m.name} className="size-full" /></span>
                 <span className="text-xs font-bold">{m.name}</span>
               </Link>

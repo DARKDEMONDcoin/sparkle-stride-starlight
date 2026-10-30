@@ -2,7 +2,7 @@ import { friendlyPublishError } from "@/lib/publish-errors";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { employeeId, employeeSlug } from "@/lib/employee-slugs";
+import { employeeCalendarSlug, employeeId, employeeSlug } from "@/lib/employee-slugs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getTeamAgenda, setArticleDate, type AgendaItem } from "@/lib/team-agenda.functions";
 import { AgendaChip, AgendaItemDialog, AgendaMonthGrid, TeamAgendaList } from "@/components/app/TeamAgenda";
@@ -63,7 +63,7 @@ export const Route = createFileRoute("/app/calendar")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  beforeLoad: ({ search }) => { if (search.employee && employeeSlug(search.employee) !== search.employee) throw redirect({ to: "/app/calendar", search: { employee: employeeSlug(search.employee) as "siraj" }, statusCode: 301, replace: true }); },
+  beforeLoad: ({ search }) => { if (search.employee && employeeSlug(search.employee) !== search.employee) throw redirect({ to: "/app/calendar", search: { employee: employeeCalendarSlug(search.employee) }, statusCode: 301, replace: true }); },
   validateSearch: (s: Record<string, unknown>): { employee?: EmployeeLens | "siraj" | "amal" | "salem" } =>
     typeof s["employee"] === "string" && employeeId(s["employee"]) in LENSES
       ? { employee: s["employee"] as EmployeeLens | "siraj" | "amal" | "salem" }
@@ -1048,7 +1048,7 @@ function CalendarPage() {
                     </ul>
                     <Link
                       to="/app/chat/$id"
-                      params={{ id: pid }}
+                      params={{ id: employeeSlug(pid) }}
                       className="mt-4 inline-flex min-h-10 items-center gap-1.5 px-1 text-sm font-bold text-primary"
                     >
                       تحدّث مع {pm?.name}
@@ -1733,7 +1733,7 @@ function EmployeeLensBar({ employee, lens, count }: { employee: EmployeeLens; le
         </div>
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:justify-end">
-        <Link to="/app/chat/$id" params={{ id: employee }} className="inline-flex min-h-10 items-center justify-center rounded-xl border border-border px-3 py-2 text-center text-xs font-bold hover:bg-secondary">
+        <Link to="/app/chat/$id" params={{ id: employeeSlug(employee) }} className="inline-flex min-h-10 items-center justify-center rounded-xl border border-border px-3 py-2 text-center text-xs font-bold hover:bg-secondary">
           اطلب من {m?.name ?? "الموظف"}
         </Link>
         <Link to="/app/calendar" className="inline-flex min-h-10 items-center justify-center rounded-xl px-3 py-2 text-center text-xs font-bold text-muted-foreground hover:bg-secondary">
