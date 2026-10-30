@@ -47,14 +47,14 @@ export function DiwanHero() {
       <div className="diwan-head">
         <p className="diwan-eyebrow">
           <i aria-hidden="true" />
-          مجلسك الرقمي — ستة موظفين يعملون الآن
+          مجلسك الرقمي — سبعة موظفين يعملون الآن
         </p>
         <h1 id="diwan-title" className="diwan-title">
           افتح ديوانك،
           <span>وخلّي فريقك يشتغل</span>
         </h1>
         <p className="diwan-lead">
-          زياد يمنحك مجلسًا من ستة موظفين بالذكاء الاصطناعي: ينشرون، يصمّمون، يردّون على عملائك،
+          زياد يمنحك مجلسًا من سبعة موظفين بالذكاء الاصطناعي: ينشرون، يصمّمون، يردّون على عملائك،
           ويتابعون مبيعاتك بالعربية وبلهجتك — وأنت تجلس في الصدر وتقرّر فقط.
         </p>
         <div className="diwan-actions">

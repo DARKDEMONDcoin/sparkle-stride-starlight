@@ -12,7 +12,7 @@ export function ProductShowcase() {
           <div className="mx-auto max-w-3xl text-center">
             <p className="section-kicker">هكذا يعمل فريقك الرقمي</p>
             <h2 className="section-title">
-              ستة موظفين ينفّذون العمل داخل حساباتك، وأنت تديرهم من مكان واحد
+              سبعة موظفين ينفّذون العمل داخل حساباتك، وأنت تديرهم من مكان واحد
             </h2>
             <p className="section-lead">
               زياد يمنحك فريقًا رقميًا عربيًا يعمل داخل حساباتك: يناقشك، ينفّذ مهامك، وينظّم وقتك —

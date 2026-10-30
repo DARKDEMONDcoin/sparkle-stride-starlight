@@ -48636,3 +48636,16 @@ html body .sahl-trust .sahl-trust-row > span { flex: initial !important; max-wid
 @media (max-width: 720px) {
   html body .sahl-ads-metrics > span strong { word-break: keep-all; overflow-wrap: normal; hyphens: none; font-size: clamp(1.15rem, 5.2vw, 1.6rem); line-height: 1.25; }
 }
+
+/* Onboarding setup: objectives, team and short interviews */
+.setup-goal-grid { display: grid; width: 100%; gap: .6rem; margin-top: 1rem; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }
+.setup-goal { border: 1px solid var(--border); border-radius: 1rem; background: var(--card); padding: .75rem; text-align: start; }
+.setup-goal.is-on { border-color: var(--primary); background: var(--accent); }
+.setup-goal-toggle { display: flex; width: 100%; align-items: center; gap: .6rem; }
+.setup-goal-fields { margin-top: .6rem; display: grid; gap: .4rem; font-size: .75rem; color: var(--muted-foreground); }
+.setup-goal-fields label { display: flex; align-items: center; gap: .4rem; }
+.setup-goal-fields input, .setup-goal-fields select { width: 5.5rem; border: 1px solid var(--border); border-radius: .6rem; background: var(--background); padding: .25rem .5rem; color: var(--foreground); }
+.setup-member { display: flex; flex-direction: column; align-items: center; gap: .3rem; border: 1px solid var(--border); border-radius: 1rem; background: var(--card); padding: .75rem; text-align: center; }
+.setup-member.is-on { border-color: var(--primary); background: var(--accent); }
+.setup-chip { border: 1px solid var(--border); border-radius: 999px; background: var(--card); padding: .35rem .85rem; font-size: .8rem; font-weight: 600; }
+.setup-chip.is-on { border-color: var(--primary); background: var(--primary); color: var(--primary-foreground); }
