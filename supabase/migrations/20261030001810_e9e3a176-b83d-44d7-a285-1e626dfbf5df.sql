@@ -1,0 +1,1 @@
+CREATE OR REPLACE FUNCTION private.app_base_url() RETURNS text LANGUAGE sql IMMUTABLE SET search_path TO 'private','public' AS $$ select 'https://getziad.com' $$;
