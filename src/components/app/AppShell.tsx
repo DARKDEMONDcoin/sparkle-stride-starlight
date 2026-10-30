@@ -25,6 +25,8 @@ import { Button } from "@/components/ui/button";
 import defaultWorkspace from "@/assets/default-workspace-identity.jpg";
 import { useServerFn } from "@tanstack/react-start";
 import { claimReferral } from "@/lib/referral.functions";
+import { employeeSlug } from "@/lib/employee-slugs";
+import { useBrandBrain } from "@/lib/brand-brain-query";
 
 function ReferralClaimer() {
   const claim = useServerFn(claimReferral);
@@ -124,12 +126,12 @@ function SidebarBody({ onNavigate, collapsed = false, onToggle }: { onNavigate?:
             const thread = inbox?.find((t) => t.employee_id === m.id);
             const unread = thread?.unread_count ?? 0;
             const time = inboxTime(thread?.last_employee_message_at);
-            const active = pathname === `/app/chat/${m.id}`;
+            const active = pathname === `/app/chat/${employeeSlug(m.id)}`;
             return (
               <Link
                 key={m.id}
                 to="/app/chat/$id"
-                params={{ id: m.id }}
+                params={{ id: employeeSlug(m.id) }}
                 onClick={onNavigate}
                  title={collapsed ? m.name : undefined}
                  aria-label={collapsed ? `${m.name}${unread ? `، ${unread} غير مقروء` : ""}` : undefined}
@@ -264,7 +266,7 @@ const primaryLinks = [
   { to: "/app", label: "لوحة المؤشرات", icon: LayoutDashboard },
   { to: "/app/workspace", label: "مساحة العمل", icon: FolderKanban },
   { to: "/app/approvals", label: "الموافقات", icon: CheckCircle2 },
-  { to: "/app/brain", label: "عقل العلامة", icon: BrainCircuit },
+  { to: "/app/brand", label: "عقل العلامة", icon: BrainCircuit },
   { to: "/app/integrations", label: "التكاملات", icon: Blocks },
 ] as const;
 const secondaryLinks = [
@@ -275,6 +277,8 @@ const secondaryLinks = [
 
 function PrimaryNavigation({ expanded, onToggle, mobile = false, onNavigate }: { expanded: boolean; onToggle?: () => void; mobile?: boolean; onNavigate?: (chats: boolean) => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { data: workspace } = useWorkspace();
+  const { data: brand } = useBrandBrain(workspace?.id);
   const renderLink = (item: (typeof primaryLinks)[number] | (typeof secondaryLinks)[number]) => {
     const active = item.to === "/app" ? pathname === "/app" : pathname === item.to || pathname.startsWith(`${item.to}/`);
     return <Link
@@ -302,6 +306,7 @@ function PrimaryNavigation({ expanded, onToggle, mobile = false, onNavigate }: {
         {expanded && <span className="min-w-0 flex-1 truncate px-2 text-sm font-black">زياد</span>}
       </div>}
       <div className="space-y-1">{primaryLinks.map(renderLink)}</div>
+      {["queued", "running"].includes(brand?.job?.status ?? "") && <Link to="/app/brand" title="جاري تحليل موقعك" className="flex items-center gap-2 px-3 py-2 text-xs text-primary"><span className="size-2 shrink-0 rounded-full bg-primary" />{expanded && "جاري تحليل موقعك"}</Link>}
       <div className="mt-auto space-y-1 border-t border-border pt-3">{secondaryLinks.map(renderLink)}</div>
     </nav>
   );

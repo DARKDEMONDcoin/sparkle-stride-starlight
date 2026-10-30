@@ -42,6 +42,7 @@ import { AppIcon, appLabel } from "@/components/site/AppIcon";
 import { ConnectNow } from "@/components/app/ConnectNow";
 import { InlineApproval } from "@/components/app/InlineApproval";
 import { getMember } from "@/data/team";
+import { employeeSlug } from "@/lib/employee-slugs";
 import {
   useEmployeeConversation,
   useIntegrations,
@@ -249,8 +250,8 @@ export const Route = createFileRoute("/app/chat/$id")({
     typeof s["prompt"] === "string" && s["prompt"] ? { prompt: s["prompt"].slice(0, 4000) } : {},
   pendingMs: 60_000,
   beforeLoad: ({ params, search }) => {
-    // Friendly alias: /app/chat/siraj → permanent id sonny.
-    if (params.id === "siraj") throw redirect({ to: "/app/chat/$id", params: { id: "sonny" }, search, replace: true });
+    const canonical = employeeSlug(params.id);
+    if (canonical !== params.id) throw redirect({ to: "/app/chat/$id", params: { id: canonical }, search, replace: true, statusCode: 301 });
   },
   loader: ({ params }) => {
     const member = getMember(params.id);
@@ -694,7 +695,7 @@ function ChatPage() {
   const { id } = Route.useParams();
   const member = getMember(id);
   if (!member) return <ChatMissing />;
-  return <ChatView key={id} id={id} member={member} />;
+  return <ChatView key={member.id} id={member.id} member={member} />;
 }
 
 function ChatView({
@@ -1358,7 +1359,7 @@ function ChatView({
         <div className="chat-topbar-actions no-scrollbar flex min-w-0 flex-1 items-center gap-1 overflow-x-auto sm:gap-1.5" dir="rtl">
           <div className="chat-employee-identity">
             <span className="chat-employee-avatar"><Portrait memberId={member.id} name={member.name} className="size-full" /></span>
-            <span className="chat-employee-names"><strong>{member.name}</strong><small>{member.role}</small></span>
+            <span className="chat-employee-names"><strong>{member.name}</strong><small>{member.role}</small>{workspace?.use_website_context !== false && workspace?.profile && typeof workspace.profile === "object" && "brandBrain" in workspace.profile && <small>يستخدم هوية علامتك</small>}</span>
           </div>
           <div className="chat-employee-navigation" aria-label={`أدوات ${member.name}`}>
             <Button type="button" variant="ghost" size="sm" className="chat-nav-button is-active" aria-label="المحادثة" title="المحادثة" onClick={() => { setBarPanel(null); setEmbeddedTool(null); }}>
@@ -1366,10 +1367,10 @@ function ChatView({
             </Button>
             {member.id === "adam" ? <Button type="button" variant="ghost" size="sm" className="chat-nav-button" aria-label="التقارير" title="التقارير" onClick={() => void navigate({ to: "/app/reports" })}>
               <LayoutDashboard className="size-4" /><span>التقارير</span>
-            </Button> : <Button type="button" variant="ghost" size="sm" className="chat-nav-button" aria-label="التقويم" title="التقويم" onClick={() => void navigate({ to: "/app/calendar", search: { employee: member.id as "sonny" } })}>
+            </Button> : <Button type="button" variant="ghost" size="sm" className="chat-nav-button" aria-label="التقويم" title="التقويم" onClick={() => void navigate({ to: "/app/calendar", search: { employee: employeeSlug(member.id) as "siraj" } })}>
               <CalendarDays className="size-4" /><span>التقويم</span>
             </Button>}
-            <Button type="button" variant="ghost" size="sm" className="chat-nav-button" aria-label="التعليمات" title="تعليمات الموظف" onClick={() => void navigate({ to: "/app/guidelines/$id", params: { id: member.id } })}>
+            <Button type="button" variant="ghost" size="sm" className="chat-nav-button" aria-label="التعليمات" title="تعليمات الموظف" onClick={() => void navigate({ to: "/app/guidelines/$id", params: { id: employeeSlug(member.id) } })}>
               <BookOpenText className="size-4" /><span>التعليمات</span>
             </Button>
             <Button ref={(button) => { barPanelButtonRefs.current.apps = button; }} type="button" variant="ghost" size="sm" className={cn("chat-nav-button", barPanel === "apps" && "is-active")} aria-label="التكاملات" title="تكاملات الموظف" aria-expanded={barPanel === "apps"} onClick={() => toggleBarPanel("apps")}>
