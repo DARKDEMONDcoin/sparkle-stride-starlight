@@ -15,7 +15,7 @@ export function EmployeeTopbar({
   active,
 }: {
   memberId: string;
-  active: "chat" | "calendar" | "guidelines" | "campaigns" | "drafts" | "baseline" | "recommendations" | "tracking" | "structure" | "landing-pages";
+  active: "chat" | "calendar" | "reports" | "guidelines" | "campaigns" | "drafts" | "baseline" | "recommendations" | "tracking" | "structure" | "landing-pages";
 }) {
   const member = getMember(memberId);
   const navigate = useNavigate();
@@ -67,7 +67,9 @@ export function EmployeeTopbar({
           <MessageCircle className="size-4" />
           <span>المحادثة</span>
         </Button>
-        <Button
+        {member.id === "adam" ? <Button type="button" variant="ghost" size="sm" className={cn("chat-nav-button", active === "reports" && "is-active")} aria-label="التقارير" title="التقارير" onClick={() => void navigate({ to: "/app/reports" })}>
+          <ChartNoAxesCombined className="size-4" /><span>التقارير</span>
+        </Button> : <Button
           type="button"
           variant="ghost"
           size="sm"
@@ -78,7 +80,7 @@ export function EmployeeTopbar({
         >
           <CalendarDays className="size-4" />
           <span>التقويم</span>
-        </Button>
+        </Button>}
         <Button
           type="button"
           variant="ghost"
