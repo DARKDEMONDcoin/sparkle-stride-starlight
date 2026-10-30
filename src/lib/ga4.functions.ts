@@ -123,7 +123,7 @@ export async function ga4SnapshotDetailed(
           state: "not_selected",
           message: noProperties
             ? "حساب Google مربوط لكن لا توجد به أي خاصية Google Analytics 4 — أنشئ خاصية GA4 لموقعك ثم أعد المحاولة."
-            : "الحساب مربوط لكن لم تختر خاصية GA4 بعد — اختر الخاصية من صفحة التكاملات.",
+            : "الحساب مربوط لكن لديك أكثر من خاصية GA4 ولم تُختر واحدة بعد — افتح التكاملات ← Google Analytics ← «اختر الخاصية»، أو زر «اختر الخاصية» في صفحة تقارير آدم.",
         },
         snapshot: null,
       };
