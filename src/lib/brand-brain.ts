@@ -18,7 +18,7 @@ export const sectionSchemas = {
   identity: z.object({ colors: z.array(colorSchema).max(12), logo: z.string().max(600), fonts: list }),
 };
 export type BrandData = Record<string, string | string[] | z.infer<typeof colorSchema>[]>;
-export type BrandSection = { data: BrandData; detected?: BrandData; suggestions?: BrandData; source?: "ai" | "user"; edited_at?: string; edited_fields?: string[]; sources?: string[] };
+export type BrandSection = { data: BrandData; detected?: BrandData; suggestions?: BrandData; ignored?: BrandData; source?: "ai" | "user"; edited_at?: string; edited_fields?: string[]; sources?: string[] };
 export type BrandSections = Partial<Record<BrandSectionKey, BrandSection>>;
 export type ScanStage = { state: "waiting" | "running" | "done" | "failed"; line?: string; error?: string; summary?: BrandData };
 export type BrandJob = { id: string; workspace_id: string; website: string; status: string; stage: number; stages: ScanStage[]; sources: string[]; error: string | null; error_status: number | null; updated_at: string; lease_until?: string | null };
@@ -30,8 +30,10 @@ export function brandCompleteness(sections: BrandSections) {
 export function mergeDetected(section: BrandSection, detected: BrandData): BrandSection {
   const data = { ...section.data }, suggestions = { ...section.suggestions };
   for (const [key, value] of Object.entries(detected)) {
-    if (section.edited_fields?.includes(key) && JSON.stringify(data[key]) !== JSON.stringify(value)) suggestions[key] = value;
-    else data[key] = value;
+    if (section.edited_fields?.includes(key) && JSON.stringify(data[key]) !== JSON.stringify(value)) {
+      if (JSON.stringify(section.ignored?.[key]) !== JSON.stringify(value)) suggestions[key] = value;
+      else delete suggestions[key];
+    } else { data[key] = value; delete suggestions[key]; }
   }
   return { ...section, data, detected, suggestions };
 }

@@ -18,7 +18,7 @@ type Color = z.infer<typeof colorSchema>;
 const roleLabels: Record<Color["role"], string> = { primary: "أساسي", secondary: "ثانوي", accent: "تمييز", background: "خلفية", text: "نص", extra: "إضافي" };
 export function BrandBrainPanel({ workspaceId, compact = false, welcomeWebsite, onWelcomeSaved }: { workspaceId: string; compact?: boolean; welcomeWebsite?: string; onWelcomeSaved?: () => void }) {
   const query = useBrandBrain(workspaceId), snapshot = query.data;
-  const change = useServerFn(changeBrandBrain), qc = useQueryClient(); const [url, setUrl] = useState(""); const [busy, setBusy] = useState(false); const [error, setError] = useState(""); const [confirm, setConfirm] = useState(false); const attempted = useRef(false);
+  const change = useServerFn(changeBrandBrain), qc = useQueryClient(); const [url, setUrl] = useState(""); const [busy, setBusy] = useState(false); const [error, setError] = useState(""); const [confirm, setConfirm] = useState(false); const attempted = useRef(false); const writeQueue = useRef<Promise<void>>(Promise.resolve());
   useEffect(() => { if (snapshot?.website) setUrl(snapshot.website); }, [snapshot?.website]);
   const refresh = async () => { await qc.invalidateQueries({ queryKey: ["brand-brain", workspaceId] }); await qc.invalidateQueries({ queryKey: ["workspace"] }); };
   const enqueue = async (website: string, section?: BrandSectionKey, replace = false) => {
@@ -26,11 +26,18 @@ export function BrandBrainPanel({ workspaceId, compact = false, welcomeWebsite, 
   };
   useEffect(() => {
     if (query.isLoading || !snapshot || !welcomeWebsite || attempted.current || snapshot.website) return;
-    attempted.current = true; void enqueue(welcomeWebsite).then((ok) => { if (ok) onWelcomeSaved?.(); });
+    attempted.current = true; void enqueue(welcomeWebsite).then((ok) => { if (ok) onWelcomeSaved?.(); else attempted.current = false; });
   }, [snapshot?.website, welcomeWebsite, query.isLoading]);
-  const save = async (section: BrandSectionKey, data: BrandData) => {
-    const fresh = await query.refetch(); const revision = fresh.data?.revision; if (revision === undefined) throw new Error("تعذّر قراءة آخر نسخة.");
-    await change({ data: { workspaceId, operation: "save", section, data, revision } }); await refresh();
+  const save = (section: BrandSectionKey, data: BrandData) => {
+    const run = writeQueue.current.catch(() => {}).then(async () => {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const fresh = await query.refetch(); const revision = fresh.data?.revision;
+        if (revision === undefined) throw new Error("تعذّر قراءة آخر نسخة.");
+        try { await change({ data: { workspaceId, operation: "save", section, data, revision } }); await refresh(); return; }
+        catch (e) { if (attempt === 2 || !(e instanceof Error) || !e.message.includes("Brand changed")) throw e; }
+      }
+    });
+    writeQueue.current = run; return run;
   };
   const retry = async () => { if (!snapshot?.job) return; try { await change({ data: { workspaceId, operation: "retry", jobId: snapshot.job.id } }); await refresh(); } catch (e) { toast.error(e instanceof Error ? e.message : "تعذّر إعادة المحاولة."); } };
   const review = async (section: BrandSectionKey, field: string, accept: boolean) => { const fresh = await query.refetch(); if (!fresh.data) return; await change({ data: { workspaceId, operation: "review", section, field, accept, revision: fresh.data.revision } }); await refresh(); };
@@ -51,20 +58,20 @@ export function BrandBrainPanel({ workspaceId, compact = false, welcomeWebsite, 
   </div>;
 }
 function SectionEditor({ sectionKey, title, section, onSave, onReview, onRescan, scanning, website, voice }: { sectionKey: BrandSectionKey; title: string; section?: BrandSection | undefined; onSave: (data: BrandData) => Promise<void>; onReview: (field: string, accept: boolean) => Promise<void>; onRescan: () => void; scanning: boolean; website: string; voice?: BrandData | undefined }) {
-  const [draft, setDraft] = useState<BrandData>({ ...emptySection(sectionKey), ...section?.data }); const [state, setState] = useState<"idle" | "dirty" | "saving" | "saved" | "error">("idle"); const [saveError, setSaveError] = useState(""); const [hidden, setHidden] = useState<string[]>([]); const timer = useRef<ReturnType<typeof setTimeout> | null>(null); const version = useRef(0);
-  useEffect(() => { if (state !== "dirty" && state !== "saving") setDraft({ ...emptySection(sectionKey), ...section?.data }); }, [section?.data]);
+  const [draft, setDraft] = useState<BrandData>({ ...emptySection(sectionKey), ...section?.data }); const [state, setState] = useState<"idle" | "dirty" | "saving" | "saved" | "error">("idle"); const [saveError, setSaveError] = useState(""); const timer = useRef<ReturnType<typeof setTimeout> | null>(null); const version = useRef(0);
+  useEffect(() => { if (state !== "dirty" && state !== "saving" && state !== "error") setDraft({ ...emptySection(sectionKey), ...section?.data }); }, [section?.data]);
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
   const update = (field: string, value: BrandData[string]) => {
     const next = { ...draft, [field]: value }; setDraft(next); setState("dirty"); version.current += 1; const current = version.current;
     if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => { setState("saving"); void onSave(next).then(() => { if (current === version.current) setState("saved"); }).catch((e) => { setSaveError(e instanceof Error ? e.message : "تعذّر الحفظ."); if (current === version.current) setState("error"); }); }, 1000);
+    timer.current = setTimeout(() => { if (current === version.current) setState("saving"); void onSave(next).then(() => { if (current === version.current) setState("saved"); }).catch((e) => { setSaveError(e instanceof Error ? e.message : "تعذّر الحفظ."); if (current === version.current) setState("error"); }); }, 1000);
   };
-  const proposals = Object.entries(section?.suggestions ?? {}).filter(([key]) => !hidden.includes(key));
+  const proposals = Object.entries(section?.suggestions ?? {});
   return <section id={`brand-${sectionKey}`} className="brand-section scroll-mt-24 rounded-lg border border-border bg-card p-4 sm:p-5">
     <header className="mb-4 flex flex-wrap justify-between gap-3"><div><h3 className="text-base font-bold">{title}</h3><div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground"><span className="rounded bg-secondary px-2 py-1">{section?.source === "user" ? "عدّلته أنت" : section?.source === "ai" ? "من موقعك" : "أضف معلوماتك"}</span>{section?.edited_at && <time>{new Date(section.edited_at).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" })}</time>}</div></div><Button variant="ghost" size="sm" onClick={onRescan} disabled={!website || scanning}><RefreshCw className="size-3.5" />إعادة الفحص</Button></header>
     <div className="grid gap-4">{Object.entries(draft).map(([field, value]) => field === "colors" ? <PaletteEditor key={field} colors={value as Color[]} detected={(section?.detected?.["colors"] ?? []) as Color[]} onChange={(colors) => update(field, colors)} voice={voice} /> : Array.isArray(value) ? <ListEditor key={field} label={labels[field] ?? field} values={value as string[]} onChange={(list) => update(field, list)} /> : <label key={field} className="grid gap-1.5 text-xs font-bold">{labels[field] ?? field}<textarea rows={field === "summary" ? 3 : 1} value={value} onChange={(e) => update(field, e.target.value)} className="min-h-10 w-full min-w-0 resize-y rounded-md border border-input bg-background px-3 py-2 text-sm font-normal" dir="auto" /></label>)}</div>
     {sectionKey === "business" && !website && <p className="mt-3 text-xs text-muted-foreground">لا تحتاج إلى موقع؛ أدخل نشاطك وجمهورك ونبرتك وألوانك هنا.</p>}
-    {proposals.map(([field, value]) => <div key={field} className="mt-4 border-t border-border pt-3"><b className="text-xs text-primary">اقتراح جديد · {labels[field] ?? "الألوان"}</b><div className="mt-2 grid gap-2 text-xs sm:grid-cols-2"><p className="break-words rounded-md bg-secondary p-2">الحالي: {JSON.stringify(draft[field])}</p><p className="break-words rounded-md bg-primary/10 p-2">المقترح: {JSON.stringify(value)}</p></div><div className="mt-2 flex gap-2">{[true, false].map((accept) => <Button key={String(accept)} size="sm" variant={accept ? "outline" : "ghost"} disabled={state === "dirty" || state === "saving"} onClick={() => void onReview(field, accept).then(() => { if (accept) setDraft((d) => ({ ...d, [field]: value })); setHidden((h) => [...h, field]); }).catch((e) => toast.error(e.message))}>{accept ? "قبول" : "تجاهل"}</Button>)}</div></div>)}
+    {proposals.map(([field, value]) => <div key={field} className="mt-4 border-t border-border pt-3"><b className="text-xs text-primary">اقتراح جديد · {labels[field] ?? "الألوان"}</b><div className="mt-2 grid gap-2 text-xs sm:grid-cols-2"><p className="break-words rounded-md bg-secondary p-2">الحالي: {JSON.stringify(draft[field])}</p><p className="break-words rounded-md bg-primary/10 p-2">المقترح: {JSON.stringify(value)}</p></div><div className="mt-2 flex gap-2">{[true, false].map((accept) => <Button key={String(accept)} size="sm" variant={accept ? "outline" : "ghost"} disabled={state === "dirty" || state === "saving"} onClick={() => void onReview(field, accept).then(() => { if (accept) setDraft((d) => ({ ...d, [field]: value })); }).catch((e) => toast.error(e.message))}>{accept ? "قبول" : "تجاهل"}</Button>)}</div></div>)}
     <footer className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3"><span role="status" className="flex items-center gap-1.5 text-xs text-primary">{state === "saved" && <Check className="size-3.5" />}{state === "saved" ? "تم الحفظ" : state === "saving" ? "جاري الحفظ…" : state === "dirty" ? "تغييرات جديدة…" : state === "error" ? saveError : ""}</span>{state === "error" && <Button size="sm" variant="outline" onClick={() => void onSave(draft).then(() => setState("saved")).catch((e) => setSaveError(e.message))}>أعد الحفظ</Button>}{section?.sources?.length ? <details className="min-w-0 text-xs text-muted-foreground"><summary className="cursor-pointer">صفحات المصدر · {section.sources.length}</summary><ul className="mt-2 max-w-full space-y-1">{section.sources.map((url) => <li key={url}><a href={url} target="_blank" rel="noopener noreferrer" dir="ltr" className="block break-all underline">{url}</a></li>)}</ul></details> : null}</footer>
   </section>;
 }

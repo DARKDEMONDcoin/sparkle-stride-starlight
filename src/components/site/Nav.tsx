@@ -17,6 +17,7 @@ import { LogoMark } from "@/components/site/LogoMark";
 import { Portrait } from "@/components/site/Portrait";
 import { Button } from "@/components/ui/button";
 import { team } from "@/data/team";
+import { employeeSlug } from "@/lib/employee-slugs";
 import "@/components/site/navigation.css";
 
 const groups = [
@@ -198,7 +199,7 @@ export function Nav({ variant = "over" }: { variant?: "over" | "solid" }) {
                     <Link
                       key={member.id}
                       to="/employees/$id"
-                      params={{ id: member.id }}
+                      params={{ id: employeeSlug(member.id) }}
                       role="menuitem"
                       activeProps={{ className: "is-current" }}
                       onClick={() => setActive(null)}
@@ -289,7 +290,7 @@ export function Nav({ variant = "over" }: { variant?: "over" | "solid" }) {
               <section>
                 <Button type="button" variant="ghost" className="sahl-nav-group-toggle" aria-expanded={mobileWorkersOpen} aria-controls="public-mobile-workers" onClick={() => setMobileWorkersOpen(value => !value)}>الموظفون<ChevronDown /></Button>
                 {mobileWorkersOpen && <div className="sahl-nav-workers" id="public-mobile-workers">
-                  {team.map(member => <Link key={member.id} to="/employees/$id" params={{ id:member.id }} activeProps={{ className:"is-current" }} onClick={() => setMobileOpen(false)}>
+                  {team.map(member => <Link key={member.id} to="/employees/$id" params={{ id:employeeSlug(member.id) }} activeProps={{ className:"is-current" }} onClick={() => setMobileOpen(false)}>
                     <span className="sahl-worker-avatar"><Portrait memberId={member.id} name={member.name} /></span>
                     <span><b>{member.name}</b><small>{member.role}</small></span><span>←</span>
                   </Link>)}
