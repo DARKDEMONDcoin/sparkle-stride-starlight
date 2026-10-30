@@ -34,8 +34,8 @@ import { splitReview } from "@/lib/task-freshness";
 import { useQueryClient } from "@tanstack/react-query";
 import { boundWelcomeUser, clearWelcomeBinding, employeeIdFromName, readWelcomeDraft, type StarterAction, type WelcomeDraftData } from "@/lib/welcome-draft";
 import { fallbackRecommendation } from "@/lib/welcome-recommendation-fallback";
-import { horizonLabel, type SavedOnboarding } from "@/lib/onboarding-objectives";
-import { setupSkipKey } from "@/routes/app.setup";
+import { horizonLabel, setupSkipKey, type SavedOnboarding } from "@/lib/onboarding-objectives";
+
 
 export const Route = createFileRoute("/app/")({
   head: () => ({

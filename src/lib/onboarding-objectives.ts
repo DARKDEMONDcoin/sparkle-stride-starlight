@@ -168,3 +168,4 @@ export function objectivesPrompt(saved: unknown, employeeId?: string): string {
   }).filter(Boolean) : [];
   return ["أهداف المالك المسجلة (وجّه عملك نحوها ولا تدّعِ تقدمًا بلا بيانات):", ...lines, ...(ans.length ? ["إجابات التهيئة:", ...ans] : [])].join("\n");
 }
+export const setupSkipKey = (ws: string) => `ziad-setup-skip-${ws}`;

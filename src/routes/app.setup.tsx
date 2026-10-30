@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/lib/data";
 import {
-  buildOnboarding, defaultAnswers, defaultGeneral, employeeSetups, generalObjectives, horizonLabel, setupEmployeeIds, type Horizon,
+  buildOnboarding, defaultAnswers, setupSkipKey, defaultGeneral, employeeSetups, generalObjectives, horizonLabel, setupEmployeeIds, type Horizon,
 } from "@/lib/onboarding-objectives";
 
 export const Route = createFileRoute("/app/setup")({
@@ -25,7 +25,6 @@ export const Route = createFileRoute("/app/setup")({
   component: Setup,
 });
 
-export const setupSkipKey = (ws: string) => `ziad-setup-skip-${ws}`;
 
 function Setup() {
   const { data: workspace } = useWorkspace();
