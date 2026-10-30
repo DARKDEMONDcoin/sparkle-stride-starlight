@@ -208,7 +208,7 @@ function FirstRun({ workspace }: { workspace: { id: string; industry?: string; w
               ))}
             </ul>
             <Button asChild variant="link" size="sm" className="mt-4 h-auto max-w-full justify-start whitespace-normal p-0 text-start text-xs">
-              <Link to="/app/chat/$id" params={{ id: m.id }}>
+              <Link to="/app/chat/$id" params={{ id: employeeSlug(m.id) }}>
                 <span>ابدأ مع {m.name}</span> <ArrowLeft className="size-3.5 shrink-0" aria-hidden="true" />
               </Link>
             </Button>
@@ -241,7 +241,7 @@ function RequestBox() {
       onSubmit={(e) => {
         e.preventDefault();
         if (!text.trim()) return;
-        void navigate({ to: "/app/chat/$id", params: { id: target }, search: { prompt: text.trim() } });
+        void navigate({ to: "/app/chat/$id", params: { id: employeeSlug(target) }, search: { prompt: text.trim() } });
       }}
     >
       <label htmlFor="home-request" className="font-display text-lg font-black">ماذا تريد من فريقك اليوم؟</label>

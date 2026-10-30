@@ -169,7 +169,7 @@ function MemberPage() {
             <div className="employee-guide-header-actions"><Button asChild className="employee-guide-cta"><Link to="/welcome">ابدأ مع {m.name} <ArrowLeft /></Link></Button><Button asChild variant="outline" className="employee-guide-secondary"><Link to="/pricing">شاهد الأسعار</Link></Button></div>
           </section>
 
-          <section className="employee-guide-colleagues"><h2>تعرّف على بقية الفريق</h2><div className="employee-guide-colleague-list">{others.map((other) => <Link key={other.id} to="/employees/$id" params={{ id: other.id }} className="employee-guide-colleague"><Portrait memberId={other.id} name={other.name} /><div><strong>{other.name}</strong><span>{other.role}</span></div></Link>)}</div></section>
+          <section className="employee-guide-colleagues"><h2>تعرّف على بقية الفريق</h2><div className="employee-guide-colleague-list">{others.map((other) => <Link key={other.id} to="/employees/$id" params={{ id: employeeSlug(other.id) }} className="employee-guide-colleague"><Portrait memberId={other.id} name={other.name} /><div><strong>{other.name}</strong><span>{other.role}</span></div></Link>)}</div></section>
         </div>
       </div>
       <div className="employee-guide-mobile-action"><Button asChild className="employee-guide-cta"><Link to="/welcome">وظّف {m.name} الآن</Link></Button><Button asChild variant="outline" className="employee-guide-secondary"><Link to="/pricing">الأسعار</Link></Button></div>

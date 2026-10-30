@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Portrait } from "@/components/site/Portrait";
 import { getMember } from "@/data/team";
 import { cn } from "@/lib/utils";
-import { employeeSlug } from "@/lib/employee-slugs";
+import { employeeCalendarSlug, employeeSlug } from "@/lib/employee-slugs";
 
 export function EmployeeTopbar({
   memberId,
@@ -27,7 +27,7 @@ export function EmployeeTopbar({
   const goCalendar = () =>
     void navigate({
       to: "/app/calendar",
-      search: { employee: employeeSlug(member.id) as "siraj" },
+      search: { employee: employeeCalendarSlug(member.id) },
     });
   const goGuidelines = () =>
     void navigate({ to: "/app/guidelines/$id", params: { id: employeeSlug(member.id) } });
