@@ -64,6 +64,7 @@ import { Route as AppTrustRouteImport } from './routes/app.trust'
 import { Route as AppWorkspaceRouteImport } from './routes/app.workspace'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
+import { Route as ChatIdRouteImport } from './routes/chat.$id'
 import { Route as EmployeesIndexRouteImport } from './routes/employees.index'
 import { Route as EmployeesIdRouteImport } from './routes/employees.$id'
 import { Route as RCodeRouteImport } from './routes/r.$code'
@@ -375,6 +376,11 @@ const BlogSlugRoute = BlogSlugRouteImport.update({
   path: '/blog/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChatIdRoute = ChatIdRouteImport.update({
+  id: '/chat/$id',
+  path: '/chat/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EmployeesIndexRoute = EmployeesIndexRouteImport.update({
   id: '/employees/',
   path: '/employees/',
@@ -611,6 +617,7 @@ export interface FileRoutesByFullPath {
   '/app/trust': typeof AppTrustRoute
   '/app/workspace': typeof AppWorkspaceRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/chat/$id': typeof ChatIdRoute
   '/employees/$id': typeof EmployeesIdRoute
   '/r/$code': typeof RCodeRoute
   '/s/$token': typeof STokenRoute
@@ -701,6 +708,7 @@ export interface FileRoutesByTo {
   '/app/trust': typeof AppTrustRoute
   '/app/workspace': typeof AppWorkspaceRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/chat/$id': typeof ChatIdRoute
   '/employees/$id': typeof EmployeesIdRoute
   '/r/$code': typeof RCodeRoute
   '/s/$token': typeof STokenRoute
@@ -794,6 +802,7 @@ export interface FileRoutesById {
   '/app/trust': typeof AppTrustRoute
   '/app/workspace': typeof AppWorkspaceRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/chat/$id': typeof ChatIdRoute
   '/employees/$id': typeof EmployeesIdRoute
   '/r/$code': typeof RCodeRoute
   '/s/$token': typeof STokenRoute
@@ -888,6 +897,7 @@ export interface FileRouteTypes {
     | '/app/trust'
     | '/app/workspace'
     | '/blog/$slug'
+    | '/chat/$id'
     | '/employees/$id'
     | '/r/$code'
     | '/s/$token'
@@ -978,6 +988,7 @@ export interface FileRouteTypes {
     | '/app/trust'
     | '/app/workspace'
     | '/blog/$slug'
+    | '/chat/$id'
     | '/employees/$id'
     | '/r/$code'
     | '/s/$token'
@@ -1070,6 +1081,7 @@ export interface FileRouteTypes {
     | '/app/trust'
     | '/app/workspace'
     | '/blog/$slug'
+    | '/chat/$id'
     | '/employees/$id'
     | '/r/$code'
     | '/s/$token'
@@ -1137,6 +1149,7 @@ export interface RootRouteChildren {
   ApiEmployeeStreamRoute: typeof ApiEmployeeStreamRoute
   ApiTranscribeRoute: typeof ApiTranscribeRoute
   BlogSlugRoute: typeof BlogSlugRoute
+  ChatIdRoute: typeof ChatIdRoute
   EmployeesIdRoute: typeof EmployeesIdRoute
   RCodeRoute: typeof RCodeRoute
   STokenRoute: typeof STokenRoute
@@ -1552,6 +1565,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/chat/$id': {
+      id: '/chat/$id'
+      path: '/chat/$id'
+      fullPath: '/chat/$id'
+      preLoaderRoute: typeof ChatIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/employees/': {
       id: '/employees/'
       path: '/employees'
@@ -1919,6 +1939,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiEmployeeStreamRoute: ApiEmployeeStreamRoute,
   ApiTranscribeRoute: ApiTranscribeRoute,
   BlogSlugRoute: BlogSlugRoute,
+  ChatIdRoute: ChatIdRoute,
   EmployeesIdRoute: EmployeesIdRoute,
   RCodeRoute: RCodeRoute,
   STokenRoute: STokenRoute,
