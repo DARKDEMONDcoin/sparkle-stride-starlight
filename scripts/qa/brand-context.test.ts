@@ -64,3 +64,10 @@ test("دليل العلامة موجه للموظفين الستة دون نقص
   expect(new Set(BRAND_EMPLOYEE_IDS).size).toBe(6);
   expect(BRAND_EMPLOYEE_IDS).toEqual(["sonny", "eva", "sam", "nour", "dana", "adam"]);
 });
+test("Brand Brain exposes saved data but never unaccepted suggestions", () => {
+  const context = buildBrandContext({ profile: { brandBrain: { business: { data: { summary: "Owner approved business" }, source: "user", suggestions: { summary: "UNACCEPTED GUESS" } }, identity: { data: { colors: [{ hex: "#137c6f", role: "primary" }] } } } } }, [], "Design a post");
+  expect(context).toContain("Owner approved business"); expect(context).toContain("#137c6f"); expect(context).not.toContain("UNACCEPTED GUESS");
+});
+test("website-context opt-out prevents Brand Brain injection", () => {
+  expect(buildBrandContext({ use_website_context: false, profile: { brandBrain: { business: { data: { summary: "Private brand" } } } } }, [], "Write")).toBe("");
+});

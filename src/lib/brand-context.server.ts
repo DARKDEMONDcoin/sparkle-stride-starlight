@@ -47,7 +47,7 @@ export function buildBrandContext(
   const brain = workspace.profile && typeof workspace.profile === "object" ? (workspace.profile as Record<string, unknown>)["brandBrain"] : null;
   const profile =
     workspace.profile && typeof workspace.profile === "object"
-      ? sanitizeBrandKnowledge(JSON.stringify(workspace.profile), 3_000)
+      ? sanitizeBrandKnowledge(JSON.stringify(Object.fromEntries(Object.entries(workspace.profile).filter(([key]) => key !== "brandBrain"))), 3_000)
       : "";
 
   return [
