@@ -1,0 +1,6 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { AppShell, WorkspaceCard } from "@/components/app/AppShell";
+import { BrandBrainPanel } from "@/components/app/BrandBrainPanel";
+import { useWorkspace } from "@/lib/data";
+export const Route = createFileRoute("/app/brand")({ head: () => ({ meta: [ { title: "عقل العلامة — الهوية والجمهور | زياد" }, { name: "description", content: "راجع نشاطك وجمهورك ونبرة علامتك وألوانها من مصدر موحد قابل للتعديل." }, { property: "og:title", content: "عقل العلامة — الهوية والجمهور | زياد" }, { property: "og:description", content: "تحليل موقعك ومرجع هوية علامتك لفريق زياد." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" } ] }), component: BrandPage });
+function BrandPage() { const { data: workspace } = useWorkspace(); return <AppShell title="عقل العلامة"><main className="mx-auto w-full min-w-0 max-w-3xl space-y-5" dir="rtl"><WorkspaceCard />{workspace && <BrandBrainPanel workspaceId={workspace.id} />}</main></AppShell>; }

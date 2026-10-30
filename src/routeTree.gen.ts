@@ -70,6 +70,7 @@ import { Route as STokenRouteImport } from './routes/s.$token'
 import { Route as UseCasesIndexRouteImport } from './routes/use-cases.index'
 import { Route as UseCasesIdRouteImport } from './routes/use-cases.$id'
 import { Route as ApiPublicAdsDailyAuditRouteImport } from './routes/api/public/ads-daily-audit'
+import { Route as ApiPublicBrandScanRouteImport } from './routes/api/public/brand-scan'
 import { Route as ApiPublicInboxWatchRouteImport } from './routes/api/public/inbox-watch'
 import { Route as ApiPublicLearningCycleRouteImport } from './routes/api/public/learning-cycle'
 import { Route as ApiPublicMorningBriefingRouteImport } from './routes/api/public/morning-briefing'
@@ -403,6 +404,11 @@ const ApiPublicAdsDailyAuditRoute = ApiPublicAdsDailyAuditRouteImport.update({
   path: '/api/public/ads-daily-audit',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicBrandScanRoute = ApiPublicBrandScanRouteImport.update({
+  id: '/api/public/brand-scan',
+  path: '/api/public/brand-scan',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicInboxWatchRoute = ApiPublicInboxWatchRouteImport.update({
   id: '/api/public/inbox-watch',
   path: '/api/public/inbox-watch',
@@ -607,6 +613,7 @@ export interface FileRoutesByFullPath {
   '/employees/': typeof EmployeesIndexRoute
   '/use-cases/': typeof UseCasesIndexRoute
   '/api/public/ads-daily-audit': typeof ApiPublicAdsDailyAuditRoute
+  '/api/public/brand-scan': typeof ApiPublicBrandScanRoute
   '/api/public/inbox-watch': typeof ApiPublicInboxWatchRoute
   '/api/public/learning-cycle': typeof ApiPublicLearningCycleRoute
   '/api/public/morning-briefing': typeof ApiPublicMorningBriefingRoute
@@ -695,6 +702,7 @@ export interface FileRoutesByTo {
   '/employees': typeof EmployeesIndexRoute
   '/use-cases': typeof UseCasesIndexRoute
   '/api/public/ads-daily-audit': typeof ApiPublicAdsDailyAuditRoute
+  '/api/public/brand-scan': typeof ApiPublicBrandScanRoute
   '/api/public/inbox-watch': typeof ApiPublicInboxWatchRoute
   '/api/public/learning-cycle': typeof ApiPublicLearningCycleRoute
   '/api/public/morning-briefing': typeof ApiPublicMorningBriefingRoute
@@ -786,6 +794,7 @@ export interface FileRoutesById {
   '/employees/': typeof EmployeesIndexRoute
   '/use-cases/': typeof UseCasesIndexRoute
   '/api/public/ads-daily-audit': typeof ApiPublicAdsDailyAuditRoute
+  '/api/public/brand-scan': typeof ApiPublicBrandScanRoute
   '/api/public/inbox-watch': typeof ApiPublicInboxWatchRoute
   '/api/public/learning-cycle': typeof ApiPublicLearningCycleRoute
   '/api/public/morning-briefing': typeof ApiPublicMorningBriefingRoute
@@ -878,6 +887,7 @@ export interface FileRouteTypes {
     | '/employees/'
     | '/use-cases/'
     | '/api/public/ads-daily-audit'
+    | '/api/public/brand-scan'
     | '/api/public/inbox-watch'
     | '/api/public/learning-cycle'
     | '/api/public/morning-briefing'
@@ -966,6 +976,7 @@ export interface FileRouteTypes {
     | '/employees'
     | '/use-cases'
     | '/api/public/ads-daily-audit'
+    | '/api/public/brand-scan'
     | '/api/public/inbox-watch'
     | '/api/public/learning-cycle'
     | '/api/public/morning-briefing'
@@ -1056,6 +1067,7 @@ export interface FileRouteTypes {
     | '/employees/'
     | '/use-cases/'
     | '/api/public/ads-daily-audit'
+    | '/api/public/brand-scan'
     | '/api/public/inbox-watch'
     | '/api/public/learning-cycle'
     | '/api/public/morning-briefing'
@@ -1121,6 +1133,7 @@ export interface RootRouteChildren {
   EmployeesIndexRoute: typeof EmployeesIndexRoute
   UseCasesIndexRoute: typeof UseCasesIndexRoute
   ApiPublicAdsDailyAuditRoute: typeof ApiPublicAdsDailyAuditRoute
+  ApiPublicBrandScanRoute: typeof ApiPublicBrandScanRoute
   ApiPublicInboxWatchRoute: typeof ApiPublicInboxWatchRoute
   ApiPublicLearningCycleRoute: typeof ApiPublicLearningCycleRoute
   ApiPublicMorningBriefingRoute: typeof ApiPublicMorningBriefingRoute
@@ -1569,6 +1582,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAdsDailyAuditRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/brand-scan': {
+      id: '/api/public/brand-scan'
+      path: '/api/public/brand-scan'
+      fullPath: '/api/public/brand-scan'
+      preLoaderRoute: typeof ApiPublicBrandScanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/inbox-watch': {
       id: '/api/public/inbox-watch'
       path: '/api/public/inbox-watch'
@@ -1886,6 +1906,7 @@ const rootRouteChildren: RootRouteChildren = {
   EmployeesIndexRoute: EmployeesIndexRoute,
   UseCasesIndexRoute: UseCasesIndexRoute,
   ApiPublicAdsDailyAuditRoute: ApiPublicAdsDailyAuditRoute,
+  ApiPublicBrandScanRoute: ApiPublicBrandScanRoute,
   ApiPublicInboxWatchRoute: ApiPublicInboxWatchRoute,
   ApiPublicLearningCycleRoute: ApiPublicLearningCycleRoute,
   ApiPublicMorningBriefingRoute: ApiPublicMorningBriefingRoute,
