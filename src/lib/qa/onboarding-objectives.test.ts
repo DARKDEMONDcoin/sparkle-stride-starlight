@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { team } from "../../src/data/team";
-import { buildOnboarding, employeeSetups, generalObjectives, objectivesPrompt } from "../../src/lib/onboarding-objectives";
-import { purposeMembers } from "../../src/lib/welcome-purpose";
+import { team } from "@/data/team";
+import { buildOnboarding, employeeSetups, generalObjectives, objectivesPrompt } from "@/lib/onboarding-objectives";
+import { purposeMembers } from "@/lib/welcome-purpose";
 
 describe("onboarding objectives", () => {
   it("covers all seven employees with objectives and short default-answered questions", () => {
