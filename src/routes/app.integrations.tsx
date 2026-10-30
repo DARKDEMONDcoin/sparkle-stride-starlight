@@ -134,12 +134,23 @@ function IntegrationsPage() {
           qc.invalidateQueries({ queryKey: ["integrations", workspace.id] }),
           qc.invalidateQueries({ queryKey: ["pipedream-accounts", workspace.id] }),
         ]);
-        if (backTo && !(r.warnings ?? []).length) {
-          const to = backTo;
-          setBackTo(null);
-          setTimeout(() => window.location.assign(to), 400);
-        }
-        return done;
+        return done.then(() => {
+          // GA4 بلا خاصية مختارة: نفتح منتقي الخصائص فورًا بدل إظهار «متصل» فقط.
+          const rows = qc.getQueryData<{ provider: string; status: string; account: string | null }[]>([
+            "integrations",
+            workspace.id,
+          ]);
+          const ga4 = rows?.find((x) => x.provider === "analytics" && x.status === "connected");
+          if (ga4 && !ga4.account?.startsWith("GA4 · ")) {
+            setGa4Open(true);
+            return;
+          }
+          if (backTo && !(r.warnings ?? []).length) {
+            const to = backTo;
+            setBackTo(null);
+            setTimeout(() => window.location.assign(to), 400);
+          }
+        });
       })
       .catch(() => setError("تم الربط لكن تعذّرت المزامنة — اضغط «تحديث الحسابات»."));
   }, [pendingSync, workspace, qc, syncAccounts, backTo]);
@@ -219,9 +230,7 @@ function IntegrationsPage() {
     if (isPipedreamProvider(provider) && workspace) {
       setBusy(id);
       try {
-        if (status === "connected" && provider === "analytics") {
-          setGa4Open(true);
-        } else if (status === "connected" || status === "error") {
+        if (status === "connected" || status === "error") {
           await disconnectPd({ data: { workspaceId: workspace.id, provider } });
           void qc.invalidateQueries({ queryKey: ["integrations", workspace.id] });
         } else {
@@ -492,6 +501,24 @@ function IntegrationsPage() {
                 />
               </div>
             ) : (
+              <div className="flex flex-wrap items-center gap-2">
+              {detailRow.provider === "analytics" && detailRow.status === "connected" ? (
+                <>
+                  <p className="mt-5 w-full text-sm text-ink-soft">
+                    {detailRow.account?.startsWith("GA4 · ")
+                      ? `الخاصية الحالية: ${detailRow.account.slice(6)}`
+                      : "لم تُختر خاصية بعد — اختر الموقع الذي يقرأ آدم بياناته."}
+                  </p>
+                  <button
+                    onClick={() => setGa4Open(true)}
+                    className="mt-2 inline-flex rounded-full bg-foreground px-4 py-2 text-xs font-bold text-background"
+                  >
+                    {detailRow.account?.startsWith("GA4 · ")
+                      ? "تغيير الخاصية"
+                      : "اختر الخاصية"}
+                  </button>
+                </>
+              ) : null}
               <button
                 onClick={() => void toggle(detailRow.id, detailRow.status, detailRow.provider)}
                 disabled={busy === detailRow.id}
@@ -510,6 +537,7 @@ function IntegrationsPage() {
                       ? "أعد الربط"
                       : "اربط الآن"}
               </button>
+              </div>
             )}
           </div>
         </div>
