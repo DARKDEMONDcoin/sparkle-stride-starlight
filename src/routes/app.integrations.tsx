@@ -136,13 +136,12 @@ function IntegrationsPage() {
         ]);
         return done.then(() => {
           // GA4 بلا خاصية مختارة: نفتح منتقي الخصائص فورًا بدل إظهار «متصل» فقط.
-          const rows = qc.getQueryData<{ provider: string; status: string; config: unknown }[]>([
+          const rows = qc.getQueryData<{ provider: string; status: string; account: string | null }[]>([
             "integrations",
             workspace.id,
           ]);
           const ga4 = rows?.find((x) => x.provider === "analytics" && x.status === "connected");
-          const cfg = (ga4?.config ?? {}) as { propertyId?: string };
-          if (ga4 && !cfg.propertyId) {
+          if (ga4 && !ga4.account?.startsWith("GA4 · ")) {
             setGa4Open(true);
             return;
           }
@@ -506,15 +505,15 @@ function IntegrationsPage() {
               {detailRow.provider === "analytics" && detailRow.status === "connected" ? (
                 <>
                   <p className="mt-5 w-full text-sm text-ink-soft">
-                    {(detailRow.config as { propertyId?: string } | null)?.propertyId
-                      ? `الخاصية الحالية: ${(detailRow.config as { propertyId?: string }).propertyId}`
+                    {detailRow.account?.startsWith("GA4 · ")
+                      ? `الخاصية الحالية: ${detailRow.account.slice(6)}`
                       : "لم تُختر خاصية بعد — اختر الموقع الذي يقرأ آدم بياناته."}
                   </p>
                   <button
                     onClick={() => setGa4Open(true)}
                     className="mt-2 inline-flex rounded-full bg-foreground px-4 py-2 text-xs font-bold text-background"
                   >
-                    {(detailRow.config as { propertyId?: string } | null)?.propertyId
+                    {detailRow.account?.startsWith("GA4 · ")
                       ? "تغيير الخاصية"
                       : "اختر الخاصية"}
                   </button>
