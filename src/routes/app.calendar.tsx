@@ -1,7 +1,8 @@
 import { friendlyPublishError } from "@/lib/publish-errors";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { employeeId, employeeSlug } from "@/lib/employee-slugs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getTeamAgenda, setArticleDate, type AgendaItem } from "@/lib/team-agenda.functions";
 import { AgendaChip, AgendaItemDialog, AgendaMonthGrid, TeamAgendaList } from "@/components/app/TeamAgenda";
@@ -62,9 +63,10 @@ export const Route = createFileRoute("/app/calendar")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>): { employee?: EmployeeLens } =>
-    typeof s["employee"] === "string" && s["employee"] in LENSES
-      ? { employee: s["employee"] as EmployeeLens }
+  beforeLoad: ({ search }) => { if (search.employee && employeeSlug(search.employee) !== search.employee) throw redirect({ to: "/app/calendar", search: { employee: employeeSlug(search.employee) as "siraj" }, statusCode: 301, replace: true }); },
+  validateSearch: (s: Record<string, unknown>): { employee?: EmployeeLens | "siraj" | "amal" | "salem" } =>
+    typeof s["employee"] === "string" && employeeId(s["employee"]) in LENSES
+      ? { employee: s["employee"] as EmployeeLens | "siraj" | "amal" | "salem" }
       : {},
   component: CalendarPage,
 });
@@ -221,7 +223,8 @@ function CalendarPage() {
   const [topic, setTopic] = useState("");
   const [withImage, setWithImage] = useState(true);
 
-  const { employee } = Route.useSearch();
+  const { employee: employeeParam } = Route.useSearch();
+  const employee = employeeParam ? employeeId(employeeParam) as EmployeeLens : undefined;
   const lens = employee ? LENSES[employee] : null;
   const [view, setView] = useState<"content" | "meetings">(lens?.view ?? "content");
   const [openItem, setOpenItem] = useState<AgendaItem | null>(null);

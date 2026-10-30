@@ -9,6 +9,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { employeeGuides, type EmployeeGuide } from "./employee-guides";
+import { employeeId } from "@/lib/employee-slugs";
 
 export type TeamMember = {
   /** Stable internal ID (sonny=سِراج, eva=أمَل, sam=سالم, nour, dana, adam, abdullah=عبدالله). Never rename — stored in data and links. */
@@ -485,4 +486,4 @@ export const team: TeamMember[] = [
   },
 ];
 
-export const getMember = (id: string) => team.find((m) => m.id === id);
+export const getMember = (id: string) => team.find((m) => m.id === employeeId(id));

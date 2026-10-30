@@ -1,4 +1,5 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
+import { employeeSlug } from "@/lib/employee-slugs";
 import { AppShell } from "@/components/app/AppShell";
 import { EmployeeGuidelines } from "@/components/app/EmployeeGuidelines";
 import { EmployeeTopbar } from "@/components/app/EmployeeTopbar";
@@ -9,6 +10,7 @@ import { AdsConnections } from "@/components/app/AdsConnections";
 import { AdsCampaignHistory } from "@/components/app/AdsCampaignHistory";
 
 export const Route = createFileRoute("/app/guidelines/$id")({
+  beforeLoad: ({ params }) => { const canonical = employeeSlug(params.id); if (canonical !== params.id) throw redirect({ to: "/app/guidelines/$id", params: { id: canonical }, statusCode: 301, replace: true }); },
   loader: ({ params }) => {
     const member = getMember(params.id);
     if (!member) throw notFound();

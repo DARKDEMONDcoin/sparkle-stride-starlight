@@ -41,6 +41,7 @@ import { Route as AppAutomationsRouteImport } from './routes/app.automations'
 import { Route as AppAutopilotRouteImport } from './routes/app.autopilot'
 import { Route as AppBacklinksRouteImport } from './routes/app.backlinks'
 import { Route as AppBrainRouteImport } from './routes/app.brain'
+import { Route as AppBrandRouteImport } from './routes/app.brand'
 import { Route as AppBrowserRouteImport } from './routes/app.browser'
 import { Route as AppCalendarRouteImport } from './routes/app.calendar'
 import { Route as AppChatRouteImport } from './routes/app.chat'
@@ -70,6 +71,7 @@ import { Route as STokenRouteImport } from './routes/s.$token'
 import { Route as UseCasesIndexRouteImport } from './routes/use-cases.index'
 import { Route as UseCasesIdRouteImport } from './routes/use-cases.$id'
 import { Route as ApiPublicAdsDailyAuditRouteImport } from './routes/api/public/ads-daily-audit'
+import { Route as ApiPublicBrandScanRouteImport } from './routes/api/public/brand-scan'
 import { Route as ApiPublicInboxWatchRouteImport } from './routes/api/public/inbox-watch'
 import { Route as ApiPublicLearningCycleRouteImport } from './routes/api/public/learning-cycle'
 import { Route as ApiPublicMorningBriefingRouteImport } from './routes/api/public/morning-briefing'
@@ -258,6 +260,11 @@ const AppBrainRoute = AppBrainRouteImport.update({
   path: '/brain',
   getParentRoute: () => AppRoute,
 } as any)
+const AppBrandRoute = AppBrandRouteImport.update({
+  id: '/brand',
+  path: '/brand',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppBrowserRoute = AppBrowserRouteImport.update({
   id: '/browser',
   path: '/browser',
@@ -401,6 +408,11 @@ const UseCasesIdRoute = UseCasesIdRouteImport.update({
 const ApiPublicAdsDailyAuditRoute = ApiPublicAdsDailyAuditRouteImport.update({
   id: '/api/public/ads-daily-audit',
   path: '/api/public/ads-daily-audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicBrandScanRoute = ApiPublicBrandScanRouteImport.update({
+  id: '/api/public/brand-scan',
+  path: '/api/public/brand-scan',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicInboxWatchRoute = ApiPublicInboxWatchRouteImport.update({
@@ -577,6 +589,7 @@ export interface FileRoutesByFullPath {
   '/app/autopilot': typeof AppAutopilotRoute
   '/app/backlinks': typeof AppBacklinksRoute
   '/app/brain': typeof AppBrainRoute
+  '/app/brand': typeof AppBrandRoute
   '/app/browser': typeof AppBrowserRoute
   '/app/calendar': typeof AppCalendarRoute
   '/app/chat': typeof AppChatRouteWithChildren
@@ -607,6 +620,7 @@ export interface FileRoutesByFullPath {
   '/employees/': typeof EmployeesIndexRoute
   '/use-cases/': typeof UseCasesIndexRoute
   '/api/public/ads-daily-audit': typeof ApiPublicAdsDailyAuditRoute
+  '/api/public/brand-scan': typeof ApiPublicBrandScanRoute
   '/api/public/inbox-watch': typeof ApiPublicInboxWatchRoute
   '/api/public/learning-cycle': typeof ApiPublicLearningCycleRoute
   '/api/public/morning-briefing': typeof ApiPublicMorningBriefingRoute
@@ -666,6 +680,7 @@ export interface FileRoutesByTo {
   '/app/autopilot': typeof AppAutopilotRoute
   '/app/backlinks': typeof AppBacklinksRoute
   '/app/brain': typeof AppBrainRoute
+  '/app/brand': typeof AppBrandRoute
   '/app/browser': typeof AppBrowserRoute
   '/app/calendar': typeof AppCalendarRoute
   '/app/decisions': typeof AppDecisionsRoute
@@ -695,6 +710,7 @@ export interface FileRoutesByTo {
   '/employees': typeof EmployeesIndexRoute
   '/use-cases': typeof UseCasesIndexRoute
   '/api/public/ads-daily-audit': typeof ApiPublicAdsDailyAuditRoute
+  '/api/public/brand-scan': typeof ApiPublicBrandScanRoute
   '/api/public/inbox-watch': typeof ApiPublicInboxWatchRoute
   '/api/public/learning-cycle': typeof ApiPublicLearningCycleRoute
   '/api/public/morning-briefing': typeof ApiPublicMorningBriefingRoute
@@ -756,6 +772,7 @@ export interface FileRoutesById {
   '/app/autopilot': typeof AppAutopilotRoute
   '/app/backlinks': typeof AppBacklinksRoute
   '/app/brain': typeof AppBrainRoute
+  '/app/brand': typeof AppBrandRoute
   '/app/browser': typeof AppBrowserRoute
   '/app/calendar': typeof AppCalendarRoute
   '/app/chat': typeof AppChatRouteWithChildren
@@ -786,6 +803,7 @@ export interface FileRoutesById {
   '/employees/': typeof EmployeesIndexRoute
   '/use-cases/': typeof UseCasesIndexRoute
   '/api/public/ads-daily-audit': typeof ApiPublicAdsDailyAuditRoute
+  '/api/public/brand-scan': typeof ApiPublicBrandScanRoute
   '/api/public/inbox-watch': typeof ApiPublicInboxWatchRoute
   '/api/public/learning-cycle': typeof ApiPublicLearningCycleRoute
   '/api/public/morning-briefing': typeof ApiPublicMorningBriefingRoute
@@ -848,6 +866,7 @@ export interface FileRouteTypes {
     | '/app/autopilot'
     | '/app/backlinks'
     | '/app/brain'
+    | '/app/brand'
     | '/app/browser'
     | '/app/calendar'
     | '/app/chat'
@@ -878,6 +897,7 @@ export interface FileRouteTypes {
     | '/employees/'
     | '/use-cases/'
     | '/api/public/ads-daily-audit'
+    | '/api/public/brand-scan'
     | '/api/public/inbox-watch'
     | '/api/public/learning-cycle'
     | '/api/public/morning-briefing'
@@ -937,6 +957,7 @@ export interface FileRouteTypes {
     | '/app/autopilot'
     | '/app/backlinks'
     | '/app/brain'
+    | '/app/brand'
     | '/app/browser'
     | '/app/calendar'
     | '/app/decisions'
@@ -966,6 +987,7 @@ export interface FileRouteTypes {
     | '/employees'
     | '/use-cases'
     | '/api/public/ads-daily-audit'
+    | '/api/public/brand-scan'
     | '/api/public/inbox-watch'
     | '/api/public/learning-cycle'
     | '/api/public/morning-briefing'
@@ -1026,6 +1048,7 @@ export interface FileRouteTypes {
     | '/app/autopilot'
     | '/app/backlinks'
     | '/app/brain'
+    | '/app/brand'
     | '/app/browser'
     | '/app/calendar'
     | '/app/chat'
@@ -1056,6 +1079,7 @@ export interface FileRouteTypes {
     | '/employees/'
     | '/use-cases/'
     | '/api/public/ads-daily-audit'
+    | '/api/public/brand-scan'
     | '/api/public/inbox-watch'
     | '/api/public/learning-cycle'
     | '/api/public/morning-briefing'
@@ -1121,6 +1145,7 @@ export interface RootRouteChildren {
   EmployeesIndexRoute: typeof EmployeesIndexRoute
   UseCasesIndexRoute: typeof UseCasesIndexRoute
   ApiPublicAdsDailyAuditRoute: typeof ApiPublicAdsDailyAuditRoute
+  ApiPublicBrandScanRoute: typeof ApiPublicBrandScanRoute
   ApiPublicInboxWatchRoute: typeof ApiPublicInboxWatchRoute
   ApiPublicLearningCycleRoute: typeof ApiPublicLearningCycleRoute
   ApiPublicMorningBriefingRoute: typeof ApiPublicMorningBriefingRoute
@@ -1366,6 +1391,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppBrainRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/brand': {
+      id: '/app/brand'
+      path: '/brand'
+      fullPath: '/app/brand'
+      preLoaderRoute: typeof AppBrandRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/browser': {
       id: '/app/browser'
       path: '/browser'
@@ -1567,6 +1599,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/ads-daily-audit'
       fullPath: '/api/public/ads-daily-audit'
       preLoaderRoute: typeof ApiPublicAdsDailyAuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/brand-scan': {
+      id: '/api/public/brand-scan'
+      path: '/api/public/brand-scan'
+      fullPath: '/api/public/brand-scan'
+      preLoaderRoute: typeof ApiPublicBrandScanRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/inbox-watch': {
@@ -1780,6 +1819,7 @@ interface AppRouteChildren {
   AppAutopilotRoute: typeof AppAutopilotRoute
   AppBacklinksRoute: typeof AppBacklinksRoute
   AppBrainRoute: typeof AppBrainRoute
+  AppBrandRoute: typeof AppBrandRoute
   AppBrowserRoute: typeof AppBrowserRoute
   AppCalendarRoute: typeof AppCalendarRoute
   AppChatRoute: typeof AppChatRouteWithChildren
@@ -1817,6 +1857,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAutopilotRoute: AppAutopilotRoute,
   AppBacklinksRoute: AppBacklinksRoute,
   AppBrainRoute: AppBrainRoute,
+  AppBrandRoute: AppBrandRoute,
   AppBrowserRoute: AppBrowserRoute,
   AppCalendarRoute: AppCalendarRoute,
   AppChatRoute: AppChatRouteWithChildren,
@@ -1886,6 +1927,7 @@ const rootRouteChildren: RootRouteChildren = {
   EmployeesIndexRoute: EmployeesIndexRoute,
   UseCasesIndexRoute: UseCasesIndexRoute,
   ApiPublicAdsDailyAuditRoute: ApiPublicAdsDailyAuditRoute,
+  ApiPublicBrandScanRoute: ApiPublicBrandScanRoute,
   ApiPublicInboxWatchRoute: ApiPublicInboxWatchRoute,
   ApiPublicLearningCycleRoute: ApiPublicLearningCycleRoute,
   ApiPublicMorningBriefingRoute: ApiPublicMorningBriefingRoute,

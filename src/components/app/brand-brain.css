@@ -1,0 +1,22 @@
+.brand-brain-panel { width:100%; }
+.brand-scan { padding:20px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
+.brand-stepper { margin:0; padding:0; list-style:none; }
+.brand-step { position:relative; display:grid; grid-template-columns:32px minmax(0,1fr); gap:14px; padding:18px 12px; }
+.brand-step:not(:last-child)::after { content:""; position:absolute; inset-inline-start:27px; top:49px; bottom:-16px; width:1px; background:var(--border); }
+.brand-step.is-running { background:var(--emerald-tint); border-radius:6px; }
+.brand-step-icon { position:relative; z-index:1; display:grid; place-items:center; width:32px; height:32px; background:var(--card); color:var(--muted-foreground); border-radius:50%; }
+.brand-step-icon.is-done { background:var(--primary); color:var(--primary-foreground); }
+.brand-step-icon.is-failed { color:var(--destructive); }
+.brand-progress-ring { width:27px; height:27px; border:3px solid var(--border); border-top-color:var(--primary); border-inline-end-color:var(--primary); border-radius:50%; animation:brand-ring 1.2s linear infinite; }
+.brand-skeleton { background:var(--muted); animation:brand-pulse 1.7s ease-in-out infinite; }
+.brand-finding { animation:brand-enter .3s ease-out; max-width:100%; }
+.brand-progress-fill { transition:width .4s ease; }
+.brand-swatch { background:var(--swatch); }
+.brand-swatch:hover { background:var(--swatch); }
+.brand-live-preview { background:var(--brand-preview-bg); color:var(--brand-preview-text); }
+.brand-preview-button,.brand-preview-button:hover { background:var(--brand-preview-primary); color:var(--brand-preview-bg); }
+@keyframes brand-ring { to { transform:rotate(360deg); } }
+@keyframes brand-pulse { 50% { opacity:.45; } }
+@keyframes brand-enter { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+@media (max-width:480px) { .brand-step { gap:10px; padding:16px 4px; } .brand-step:not(:last-child)::after { inset-inline-start:19px; } }
+@media (prefers-reduced-motion:reduce) { .brand-progress-ring,.brand-skeleton,.brand-finding { animation:none; } .brand-progress-fill { transition:none; } }

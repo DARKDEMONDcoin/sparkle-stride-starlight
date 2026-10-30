@@ -6,6 +6,7 @@ import { team } from "@/data/team";
 import { useChatWorkspace, useEmployeeInbox } from "@/lib/data";
 import { ChatSpaceSwitcher } from "@/components/app/ChatSpaceSwitcher";
 import { inboxTime } from "@/lib/inbox-time";
+import { employeeSlug } from "@/lib/employee-slugs";
 
 export const Route = createFileRoute("/app/chat/")({
   head: () => ({
@@ -43,7 +44,7 @@ function ChatIndex() {
             <Link
               key={m.id}
               to="/app/chat/$id"
-              params={{ id: m.id }}
+              params={{ id: employeeSlug(m.id) }}
               className="group flex min-h-20 items-center gap-3 px-2 py-3 transition-colors hover:bg-secondary/60 sm:px-4"
             >
                 <span className="relative block size-14 shrink-0 overflow-hidden rounded-full shadow-card">

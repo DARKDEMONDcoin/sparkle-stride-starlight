@@ -17,7 +17,9 @@ import { ActivationMap } from "@/components/app/ActivationMap";
 import { AdsResultsCard } from "@/components/app/AdsResultsCard";
 import { AppShell } from "@/components/app/AppShell";
 import { ConnectionHealthBanner } from "@/components/app/ConnectionHealthBanner";
-import { BusinessProfileCard } from "@/components/app/BusinessProfileCard";
+import { BrandBrainPanel } from "@/components/app/BrandBrainPanel";
+import { useBrandBrain } from "@/lib/brand-brain-query";
+import { employeeSlug } from "@/lib/employee-slugs";
 import { CatchUpNote } from "@/components/app/CatchUpNote";
 import { MorningBriefingCard } from "@/components/app/MorningBriefingCard";
 import { appLabel } from "@/components/site/AppIcon";
@@ -87,7 +89,7 @@ function StarterPlan({ industry, actions }: { industry?: string | undefined; act
                 <span className="block break-words text-sm font-semibold leading-relaxed">{item.text}</span>
               </span>
               <Button asChild size="sm" className="shrink-0">
-                <Link to="/app/chat/$id" params={{ id: item.id }} search={{ prompt: item.text }}>ابدأ</Link>
+                <Link to="/app/chat/$id" params={{ id: employeeSlug(item.id) }} search={{ prompt: item.text }}>ابدأ</Link>
               </Button>
             </li>
           );
@@ -130,7 +132,11 @@ function FirstRun({ workspace }: { workspace: { id: string; industry?: string; w
   }, [workspace?.id]);
   const saved = stored ?? local;
   const planIndustry = saved?.industry || undefined;
-  const planActions = saved?.plan?.actions?.length
+  const { data: brand } = useBrandBrain(workspace?.id);
+  const services = brand?.sections.business?.data["services"];
+  const audience = brand?.sections.audience?.data["segments"];
+  const contextualActions: StarterAction[] = Array.isArray(services) && services.length ? [{ employee: "سِراج", text: `اقترح خطة محتوى عن ${services.slice(0, 3).join("، ")}${Array.isArray(audience) && audience.length ? ` لجمهور ${audience.slice(0, 2).join("، ")}` : ""}` }, { employee: "نور", text: `اكتب مسودة صفحة لخدمة ${services[0]}` }, { employee: "سالم", text: `جهّز مسودة رسالة تعريف بخدمات ${services.slice(0, 2).join("، ")}` }] : [];
+  const planActions = contextualActions.length ? contextualActions : saved?.plan?.actions?.length
     ? saved.plan.actions
     : planIndustry
       ? fallbackRecommendation({ industry: planIndustry, purpose: saved?.purpose === "job" || saved?.purpose === "personal" ? saved.purpose : "business" }).actions
@@ -140,10 +146,9 @@ function FirstRun({ workspace }: { workspace: { id: string; industry?: string; w
       <StarterPlan industry={planIndustry} actions={planActions} />
       {workspace ? (
         <div className="mb-4">
-          <BusinessProfileCard
+          <BrandBrainPanel
             workspaceId={workspace.id}
-            website={(workspace as { website?: string | null }).website}
-            profile={(workspace as { profile?: Record<string, unknown> }).profile as never}
+            compact
             welcomeWebsite={welcomeWebsite}
             onWelcomeSaved={() => {
               clearWelcomeBinding();
@@ -355,6 +360,7 @@ function NameWorkspace({ workspace }: { workspace: { id: string; name: string; w
 function AppHome() {
   const { data: profile } = useProfile();
   const { data: workspace } = useWorkspace();
+  const { data: brand } = useBrandBrain(workspace?.id);
   const { data: tasks, isLoading } = useTasks(workspace?.id);
   const { data: integrations } = useIntegrations(workspace?.id);
 
@@ -399,12 +405,13 @@ function AppHome() {
       {workspace ? (
         <OnboardingChecklist
           workspaceId={workspace.id}
-          hasWebsite={Boolean((workspace as { website?: string | null }).website)}
+          hasWebsite={Boolean(brand?.job?.stages[0]?.state === "done" || (workspace?.profile && typeof workspace.profile === "object" && "summary" in workspace.profile))}
           connected={connected > 0}
           requested={started}
           reviewed={list.some((t) => t.status === "done")}
         />
       ) : null}
+      {started && workspace && <div className="mb-5"><BrandBrainPanel workspaceId={workspace.id} compact /></div>}
       {isLoading ? (
         <div className="grid min-h-[40vh] place-items-center">
           <BrandLoader size="sm" />
