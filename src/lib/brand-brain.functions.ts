@@ -4,6 +4,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { normalizeBrandUrl, sectionSchemas, type BrandSectionKey, type BrandSnapshot } from "./brand-brain";
 const scope = z.object({ workspaceId: z.string().uuid() });
 export const getBrandBrain = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((v: unknown) => scope.parse(v)).handler(async ({ data, context }): Promise<BrandSnapshot> => {
+  const { data: owned, error: ownershipError } = await context.supabase.from("workspaces").select("id").eq("id", data.workspaceId).eq("owner_id", context.userId).maybeSingle();
+  if (ownershipError || !owned) throw new Error("عقل العلامة متاح لمالك مساحة العمل فقط.");
   const { data: brain, error } = await context.supabase.from("brand_brain").select("website,sections,revision,history").eq("workspace_id", data.workspaceId).maybeSingle();
   if (error) throw new Error(error.message);
   const { data: job, error: jobError } = await context.supabase.from("brand_scan_jobs").select("id,workspace_id,website,status,stage,stages,sources,error,error_status,updated_at,lease_until").eq("workspace_id", data.workspaceId).order("created_at", { ascending: false }).limit(1).maybeSingle();
