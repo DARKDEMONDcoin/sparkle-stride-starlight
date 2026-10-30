@@ -1067,6 +1067,44 @@ export type Database = {
           },
         ]
       }
+      brand_brain: {
+        Row: {
+          created_at: string
+          history: Json
+          revision: number
+          sections: Json
+          updated_at: string
+          website: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          history?: Json
+          revision?: number
+          sections?: Json
+          updated_at?: string
+          website?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          history?: Json
+          revision?: number
+          sections?: Json
+          updated_at?: string
+          website?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_brain_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_memories: {
         Row: {
           confidence: number
@@ -1140,6 +1178,68 @@ export type Database = {
           },
           {
             foreignKeyName: "brand_memories_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_scan_jobs: {
+        Row: {
+          corpus: Json
+          created_at: string
+          error: string | null
+          error_status: number | null
+          id: string
+          lease_token: string | null
+          lease_until: string | null
+          requested_section: string | null
+          sources: Json
+          stage: number
+          stages: Json
+          status: string
+          updated_at: string
+          website: string
+          workspace_id: string
+        }
+        Insert: {
+          corpus?: Json
+          created_at?: string
+          error?: string | null
+          error_status?: number | null
+          id?: string
+          lease_token?: string | null
+          lease_until?: string | null
+          requested_section?: string | null
+          sources?: Json
+          stage?: number
+          stages?: Json
+          status?: string
+          updated_at?: string
+          website: string
+          workspace_id: string
+        }
+        Update: {
+          corpus?: Json
+          created_at?: string
+          error?: string | null
+          error_status?: number | null
+          id?: string
+          lease_token?: string | null
+          lease_until?: string | null
+          requested_section?: string | null
+          sources?: Json
+          stage?: number
+          stages?: Json
+          status?: string
+          updated_at?: string
+          website?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_scan_jobs_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -4920,6 +5020,67 @@ export type Database = {
         Returns: boolean
       }
       approve_mature_referral_commissions: { Args: never; Returns: number }
+      brand_checkpoint: {
+        Args: {
+          _corpus?: Json
+          _data: Json
+          _error?: string
+          _job: string
+          _lease: string
+          _sources: Json
+          _status?: number
+        }
+        Returns: boolean
+      }
+      brand_claim: {
+        Args: { _job: string }
+        Returns: {
+          corpus: Json
+          created_at: string
+          error: string | null
+          error_status: number | null
+          id: string
+          lease_token: string | null
+          lease_until: string | null
+          requested_section: string | null
+          sources: Json
+          stage: number
+          stages: Json
+          status: string
+          updated_at: string
+          website: string
+          workspace_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "brand_scan_jobs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      brand_enqueue: {
+        Args: {
+          _replace?: boolean
+          _section?: string
+          _website: string
+          _workspace: string
+        }
+        Returns: string
+      }
+      brand_retry: { Args: { _job: string }; Returns: boolean }
+      brand_save_section: {
+        Args: {
+          _data: Json
+          _revision: number
+          _section: string
+          _workspace: string
+        }
+        Returns: number
+      }
+      brand_undo: {
+        Args: { _revision: number; _workspace: string }
+        Returns: number
+      }
       bump_rate_limit: {
         Args: { _bucket: string; _identifier: string; _window_seconds: number }
         Returns: number
