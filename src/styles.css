@@ -48676,3 +48676,18 @@ html body .sahl-trust .sahl-trust-row > span { flex: initial !important; max-wid
 .welcome-signup { border-radius: 999px; box-shadow: 0 14px 30px -16px color-mix(in oklab, var(--primary) 70%, transparent); }
 @media (max-width: 767px) { .welcome-team { grid-template-columns: repeat(4, minmax(0, 1fr)); } .welcome-team > div img { width: 2.3rem; height: 2.3rem; } }
 @media (prefers-reduced-motion: reduce) { .welcome-industry { transition: none; } }
+
+/* Dashboard hire cards */
+.hire-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: .75rem; }
+.hire-card { display: flex; flex-direction: column; align-items: center; gap: .35rem; text-align: center; padding: .9rem .6rem; border: 1px solid var(--border); border-radius: 1rem; background: var(--card); }
+.hire-card.is-on { border-color: color-mix(in oklab, var(--primary) 45%, var(--border)); background: color-mix(in oklab, var(--primary) 6%, var(--card)); }
+.hire-card > a, .hire-card > button { margin-top: .35rem; width: 100%; }
+
+/* Create-account split layout */
+.sauth-split { display: grid; gap: 2rem; width: 100%; max-width: 960px; align-items: center; }
+@media (min-width: 900px) { .sauth-split { grid-template-columns: 1fr 1fr; } }
+.sauth-aside { display: none; padding: 2rem; border-radius: 1.75rem; background: color-mix(in oklab, var(--primary) 8%, var(--card)); border: 1px solid var(--border); }
+@media (min-width: 900px) { .sauth-aside { display: block; } }
+.sauth-aside-team { display: grid; grid-template-columns: repeat(4, 1fr); gap: .6rem; margin-top: 1.25rem; }
+.sauth-aside-list { margin-top: 1.25rem; display: grid; gap: .6rem; font-size: .9rem; }
+.sauth-aside-list li { display: flex; gap: .5rem; align-items: center; }
