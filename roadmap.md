@@ -8,6 +8,10 @@
 - [x] المراحل ٣–٦ وأجزاء من ٧ (التقويم، الكوكيز، صورة الشات، رابط الأسعار الهادئ).
 - [x] صفحة التكاملات الموحدة ورابط /chat/siraj (يحوّل للمعرّف الدائم).
 # Roadmap
+## Adam reporting — 30 October
+- [ ] Replace Adam’s Calendar with Reporting in both menus; preserve other employees.
+- [ ] Show workspace connected-source inventory, real GA4/Search Console metrics, period selection, source timestamps and honest unavailable states; correct report aggregates and task labels.
+- [ ] Run focused accuracy tests and check preview; authenticated/provider verification depends on an available customer session.
 ## Revised Media Buyer specification — 23 October
 - [x] October 26 replacement-spec review: compared full 521-line attachment, current code and live schema; all specified tables have RLS, evidence/draft triggers inspected, six playbook sections match verbatim, 172 focused tests plus 6 guardrail tests pass. No application code or database changes.
 - [x] Replacement-spec step 1 confirmation: owner approved closing step 1 gaps and retaining the existing authenticated server layer; no new Edge Functions. Updated documentation and added positive owner/admin preference/version handler tests; 18 focused checks passed. No application behavior/database changes or deployment. Details: docs/qa/media-buyer-step-1-verification.md.
