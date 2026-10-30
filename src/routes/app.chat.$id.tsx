@@ -1364,9 +1364,11 @@ function ChatView({
             <Button type="button" variant="ghost" size="sm" className="chat-nav-button is-active" aria-label="المحادثة" title="المحادثة" onClick={() => { setBarPanel(null); setEmbeddedTool(null); }}>
               <MessageCircle className="size-4" /><span>المحادثة</span>
             </Button>
-            <Button type="button" variant="ghost" size="sm" className="chat-nav-button" aria-label="التقويم" title="التقويم" onClick={() => void navigate({ to: "/app/calendar", search: { employee: member.id as "sonny" } })}>
+            {member.id === "adam" ? <Button type="button" variant="ghost" size="sm" className="chat-nav-button" aria-label="التقارير" title="التقارير" onClick={() => void navigate({ to: "/app/reports" })}>
+              <LayoutDashboard className="size-4" /><span>التقارير</span>
+            </Button> : <Button type="button" variant="ghost" size="sm" className="chat-nav-button" aria-label="التقويم" title="التقويم" onClick={() => void navigate({ to: "/app/calendar", search: { employee: member.id as "sonny" } })}>
               <CalendarDays className="size-4" /><span>التقويم</span>
-            </Button>
+            </Button>}
             <Button type="button" variant="ghost" size="sm" className="chat-nav-button" aria-label="التعليمات" title="تعليمات الموظف" onClick={() => void navigate({ to: "/app/guidelines/$id", params: { id: member.id } })}>
               <BookOpenText className="size-4" /><span>التعليمات</span>
             </Button>

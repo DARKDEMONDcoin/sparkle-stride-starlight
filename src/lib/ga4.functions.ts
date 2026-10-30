@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { ReportRange } from "./report-rules";
 
 /**
  * Google Analytics 4 (مجاني بالكامل) — يستخدم نفس ربط Google الخاص بـ Search Console.
@@ -19,12 +20,13 @@ type Ga4Config = { propertyId?: string };
 
 async function loadGa4Config(workspaceId: string): Promise<Ga4Config> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from("integration_credentials")
     .select("config")
     .eq("workspace_id", workspaceId)
     .eq("provider", "analytics")
     .maybeSingle();
+  if (error) throw new Error(error.message);
   return (data?.config as Ga4Config | undefined) ?? {};
 }
 
@@ -63,7 +65,8 @@ async function autoSelectProperty(
       )
       .filter(Boolean);
     if (ids.length !== 1) return { empty: ids.length === 0 };
-    const propertyId = ids[0]!;
+    const propertyId = ids[0];
+    if (!propertyId) return { empty: true };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("integration_credentials").upsert(
       {
@@ -93,6 +96,7 @@ export async function ga4SnapshotFor(workspaceId: string, days = 28): Promise<Ga
 export async function ga4SnapshotDetailed(
   workspaceId: string,
   days = 28,
+  requestedRange?: ReportRange,
 ): Promise<{ status: import("./gsc.functions").SourceStatus; snapshot: Ga4Snapshot | null }> {
   try {
     const { hasGoogleAccount } = await import("./gsc.functions");
@@ -125,8 +129,8 @@ export async function ga4SnapshotDetailed(
       };
     }
 
-    const start = `${days}daysAgo`;
-    const end = "yesterday";
+    const start = requestedRange?.start ?? `${days}daysAgo`;
+    const end = requestedRange?.end ?? "yesterday";
     const dateRanges = [{ startDate: start, endDate: end }];
 
     const [totals, landing, channels] = await Promise.all([

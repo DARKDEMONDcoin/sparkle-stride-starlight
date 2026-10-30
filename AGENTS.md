@@ -39,6 +39,7 @@
 - Feedback/support: private RLS.
 - Settings use router search.
 - Employee IDs: permanent (DB/URLs).
+- Adam reporting reuses /app/reports and inventories workspace connections separately from implemented metric feeds; report totals come from provider aggregate requests with a shared explicit date window. Why: connection labels and top-row sums cannot establish complete business performance.
 - Brand references stay bounded/private and sanitized; why: protect sources.
 - Brand extraction uses safe schemas; competitor-research ranks direct substitutes with literal buyer/offer proof from both sites. Why: precision.
 - Keep gateway keys registered in storage/hosting; research preserves service errors. Why: stale keys broke analysis.
