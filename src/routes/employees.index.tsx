@@ -6,6 +6,7 @@ import { AppRow } from "@/components/site/AppIcon";
 import { Portrait, RegionPicker } from "@/components/site/Portrait";
 import { Reveal } from "@/components/Reveal";
 import { team } from "@/data/team";
+import { employeeSlug } from "@/lib/employee-slugs";
 
 export const Route = createFileRoute("/employees/")({
   head: () => ({
@@ -89,7 +90,7 @@ function EmployeesPage() {
 
                 <Link
                   to="/employees/$id"
-                  params={{ id: m.id }}
+                  params={{ id: employeeSlug(m.id) }}
                   className="sahl-team-card-link"
                 >
                   ملف {m.name} الكامل

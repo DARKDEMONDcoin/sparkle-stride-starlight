@@ -14,6 +14,9 @@ import { getWelcomeRecommendation } from "@/lib/welcome-recommendation.functions
 import type { WelcomeRecommendation } from "@/lib/welcome-recommendation.server";
 import { welcomeIndustries } from "@/lib/welcome-industries";
 import { purposeCopy, purposeMembers, type WelcomePurpose } from "@/lib/welcome-purpose";
+import { BrandScanProgress } from "@/components/app/BrandScanProgress";
+import { normalizeBrandUrl } from "@/lib/brand-brain";
+import "@/components/app/brand-brain.css";
 
 export type WelcomeDraft = { purpose: string; website: string; industry: string; step?: number };
 const industries = welcomeIndustries;
@@ -109,11 +112,15 @@ function Welcome() {
 
   async function scan() {
     if (!website.trim() || loading) return false;
+    const normalized = normalizeBrandUrl(website);
+    if (!normalized) { setError("أدخل رابط موقع عام صالح يبدأ بـ https."); return false; }
+    setWebsite(normalized);
+    writeWelcomeDraft({ ...readWelcomeDraft(), purpose, website: normalized, industry, step });
     setError(""); setLoading(true); setPreview(null); setFindingTab("offer"); setScanStage(0);
     const timer = window.setInterval(() => setScanStage((s) => Math.min(s + 1, scanStages.length - 1)), 2800);
     let ok = false;
     try {
-      const result = await inspect({ data: { url: website.trim() } });
+      const result = await inspect({ data: { url: normalized } });
       ok = true;
       setPreview(result);
       setWebsite(result.url);
@@ -146,6 +153,7 @@ function Welcome() {
            {loading && <div className="welcome-scan-progress" role="status" aria-live="polite"><Loader2 className="size-4 animate-spin" /> {scanStages[scanStage]}</div>}
           {error && <p className="welcome-error" role="alert">{error}</p>}
           {showPreview && <SiteCard preview={preview} tab={findingTab} onTab={setFindingTab} />}
+          {normalizeBrandUrl(website) && !loading && <BrandScanProgress queuedWebsite={website} />}
           <p className="welcome-disclaimer">هذه قراءة أولية لما يظهر علنًا، وقد تغيب معلومات عن صفحات محمية أو غير متاحة. الفحص الأعمق بعد التسجيل.</p>
         </section>}
          {step === 2 && <section className="welcome-centered"><span className="welcome-eyebrow">فريقك</span><h1 className="welcome-title">ستة موظفين إلى جانبك.</h1><div className="mt-4 grid w-full grid-cols-2 gap-3 sm:grid-cols-3">{team.map((m) => <div key={m.id} className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-3 text-center"><Portrait memberId={m.id} name={m.name} className="size-16 rounded-2xl" /><strong className="text-sm">{m.name}</strong><span className="text-xs text-muted-foreground">{m.role}</span><p className="line-clamp-2 text-xs leading-relaxed">{purposeMembers[chosenPurpose][m.id]?.headline}</p><Button type="button" variant="outline" size="sm" onClick={() => setExampleId(m.id)}>شاهد مثالًا</Button></div>)}</div></section>}

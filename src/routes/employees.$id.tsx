@@ -1,4 +1,5 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, redirect } from "@tanstack/react-router";
+import { employeeSlug } from "@/lib/employee-slugs";
 import { ArrowLeft, ArrowRight, Check, Info, ShieldCheck } from "lucide-react";
 
 import { PageShell } from "@/components/site/PageShell";
@@ -12,8 +13,9 @@ import { getMember, team } from "@/data/team";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 export const Route = createFileRoute("/employees/$id")({
+  beforeLoad: ({ params }) => { const canonical = employeeSlug(params.id); if (canonical !== params.id) throw redirect({ to: "/employees/$id", params: { id: canonical }, statusCode: 301, replace: true }); },
   loader: ({ params }) => {
-    const member = team.find((m) => m.id === params.id);
+    const member = getMember(params.id);
     if (!member) throw notFound();
     return { id: member.id, name: member.name, role: member.role, tagline: `${member.name}: دليل مفصل للمسؤوليات وطريقة العمل والمدخلات والمخرجات والأدوات والصلاحيات، مع أمثلة وأسئلة شائعة عن ${member.role}.` };
   },
@@ -57,9 +59,10 @@ function MemberNotFound() {
 }
 
 function MemberPage() {
-  const { id } = Route.useParams();
-  const m = getMember(id);
+  const { id: slug } = Route.useParams();
+  const m = getMember(slug);
   if (!m) return null;
+  const id = m.id;
   const guide = m.guide;
   const groups = skillsByCategory(id);
   const totalSkills = groups.reduce((sum, [, skills]) => sum + skills.length, 0);

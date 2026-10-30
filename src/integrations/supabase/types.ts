@@ -5072,6 +5072,17 @@ export type Database = {
         Returns: Json
       }
       brand_retry: { Args: { _job: string }; Returns: boolean }
+      brand_review_field: {
+        Args: {
+          _accept: boolean
+          _field: string
+          _owner: string
+          _revision: number
+          _section: string
+          _workspace: string
+        }
+        Returns: number
+      }
       brand_save_section: {
         Args: {
           _data: Json

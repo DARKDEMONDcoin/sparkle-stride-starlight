@@ -5,6 +5,7 @@ import { team } from "@/data/team";
 import { posts } from "@/data/blog";
 
 import { SITE_ORIGIN } from "@/lib/site-origin";
+import { employeeSlug } from "@/lib/employee-slugs";
 
 const BASE_URL = SITE_ORIGIN;
 
@@ -46,7 +47,7 @@ export const Route = createFileRoute("/sitemap.xml")({
         const paths = [
           ...staticPaths,
           ...useCases.map((u) => `/use-cases/${u.id}`),
-          ...team.map((m) => `/employees/${m.id}`),
+          ...team.map((m) => `/employees/${employeeSlug(m.id)}`),
           ...posts.map((p) => `/blog/${p.slug}`),
         ];
         const urls = [...new Set(paths)]
