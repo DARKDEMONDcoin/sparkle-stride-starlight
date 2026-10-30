@@ -8,9 +8,12 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/lib/data";
+import { employeeSlug } from "@/lib/employee-slugs";
 import {
-  buildOnboarding, defaultAnswers, setupSkipKey, defaultGeneral, employeeSetups, generalObjectives, horizonLabel, setupEmployeeIds, type Horizon,
+  buildOnboarding, defaultAnswers, setupSkipKey, defaultGeneralFor, employeeSetups, generalObjectivesFor, horizonLabel, mergeEmployeeSetup, setupEmployeeIds, type Horizon, type SavedOnboarding,
 } from "@/lib/onboarding-objectives";
+import { readWelcomeDraft } from "@/lib/welcome-draft";
+import { z } from "zod";
 
 export const Route = createFileRoute("/app/setup")({
   head: () => ({ meta: [
@@ -22,6 +25,7 @@ export const Route = createFileRoute("/app/setup")({
     { name: "twitter:card", content: "summary" },
     { name: "robots", content: "noindex" },
   ] }),
+  validateSearch: z.object({ employee: z.string().max(20).optional() }),
   component: Setup,
 });
 
@@ -30,35 +34,48 @@ function Setup() {
   const { data: workspace } = useWorkspace();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { employee: only } = Route.useSearch();
+  const single = only && employeeSetups[only] ? only : undefined;
+  const industry = (workspace as { industry?: string | null } | undefined)?.industry || readWelcomeDraft()?.industry || "";
+  const generalList = useMemo(() => generalObjectivesFor(industry), [industry]);
   const [step, setStep] = useState(0);
-  const [general, setGeneral] = useState<Record<string, { target: string; horizon: Horizon }>>(() =>
-    Object.fromEntries(defaultGeneral.map((id) => [id, { target: generalObjectives.find((o) => o.id === id)!.defaultTarget, horizon: "3m" as Horizon }])));
+  const [general, setGeneral] = useState<Record<string, { target: string; horizon: Horizon }>>({});
+  const [seeded, setSeeded] = useState(false);
+  useEffect(() => {
+    if (seeded || !workspace) return;
+    setSeeded(true);
+    setGeneral(Object.fromEntries(defaultGeneralFor(industry).map((id) => [id, { target: generalList.find((o) => o.id === id)?.defaultTarget ?? "", horizon: "3m" as Horizon }])));
+  }, [workspace, seeded, industry, generalList]);
   const [employees, setEmployees] = useState<string[]>(setupEmployeeIds);
   const [empObj, setEmpObj] = useState<Record<string, string[]>>(() => Object.fromEntries(setupEmployeeIds.map((e) => [e, [employeeSetups[e]!.objectives[0]!.id]])));
   const [answers, setAnswers] = useState<Record<string, Record<string, string>>>(() => Object.fromEntries(setupEmployeeIds.map((e) => [e, defaultAnswers(e)])));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const chosen = useMemo(() => setupEmployeeIds.filter((e) => employees.includes(e)), [employees]);
-  const total = 2 + chosen.length;
+  const chosen = useMemo(() => single ? [single] : setupEmployeeIds.filter((e) => employees.includes(e)), [employees, single]);
+  const offset = single ? 0 : 2;
+  const total = offset + chosen.length;
   useEffect(() => { if (step > total - 1) setStep(total - 1); }, [total, step]);
 
   async function finish() {
     if (!workspace || saving) return;
     setSaving(true); setError("");
-    const onboarding = buildOnboarding({ general, employees: chosen, employeeObjectives: empObj, answers });
+    const existing = ((workspace.profile as { onboarding?: SavedOnboarding } | null)?.onboarding) ?? null;
+    const onboarding = single ? mergeEmployeeSetup(existing, single, empObj[single] ?? [], answers[single] ?? {})
+      : buildOnboarding({ industry, general, employees: chosen, employeeObjectives: empObj, answers });
     const profile = { ...((workspace.profile as Record<string, unknown>) ?? {}), onboarding };
     const { error: e } = await supabase.from("workspaces").update({ profile: profile as never }).eq("id", workspace.id);
     setSaving(false);
     if (e) { setError("تعذّر الحفظ الآن. حاول مرة أخرى."); return; }
     await qc.invalidateQueries({ queryKey: ["workspace"] });
-    void navigate({ to: "/app" });
+    if (single) void navigate({ to: "/app/chat/$id", params: { id: employeeSlug(single) } });
+    else void navigate({ to: "/app" });
   }
   function skip() {
     if (workspace) { try { localStorage.setItem(setupSkipKey(workspace.id), "1"); } catch { /* optional */ } }
     void navigate({ to: "/app" });
   }
   const last = step === total - 1;
-  const empId = step >= 2 ? chosen[step - 2] : undefined;
+  const empId = step >= offset ? chosen[step - offset] : undefined;
   const member = empId ? team.find((m) => m.id === empId) : undefined;
   const setup = empId ? employeeSetups[empId] : undefined;
 
@@ -69,13 +86,13 @@ function Setup() {
       <Button variant="ghost" size="sm" onClick={skip}>لاحقًا</Button>
     </header>
     <main className="welcome-main">
-      <div className="welcome-progress"><div className="flex justify-between text-xs font-bold text-muted-foreground"><span>{step === 0 ? "أهداف مشروعك" : step === 1 ? "فريقك" : `جلسة تعريف ${member?.name ?? ""}`}</span><span dir="ltr">{step + 1} / {total}</span></div><div className="welcome-progress-track" role="progressbar" aria-label="تقدم التهيئة" aria-valuemin={0} aria-valuemax={total} aria-valuenow={step + 1}><span style={{ width: `${((step + 1) / total) * 100}%` }} /></div></div>
+      <div className="welcome-progress"><div className="flex justify-between text-xs font-bold text-muted-foreground"><span>{!single && step === 0 ? "أهداف مشروعك" : !single && step === 1 ? "فريقك" : `جلسة تعريف ${member?.name ?? ""}`}</span><span dir="ltr">{step + 1} / {total}</span></div><div className="welcome-progress-track" role="progressbar" aria-label="تقدم التهيئة" aria-valuemin={0} aria-valuemax={total} aria-valuenow={step + 1}><span style={{ width: `${((step + 1) / total) * 100}%` }} /></div></div>
       <div key={step} className="welcome-appear welcome-content">
-        {step === 0 && <section className="welcome-centered">
+        {!single && step === 0 && <section className="welcome-centered">
           <span className="welcome-eyebrow"><Target className="size-4" /> أهداف عامة</span>
           <h1 className="welcome-title">ما الذي تريد تحقيقه؟</h1>
-          <p className="welcome-lead">اخترنا هدفين شائعين. عدّل الرقم أو المدة إن أردت؛ سنتابعها في لوحة التحكم.</p>
-          <div className="setup-goal-grid">{generalObjectives.map((o) => {
+          <p className="welcome-lead">{industry && industry !== "أخرى" ? `أهداف شائعة في ${industry}. ` : ""}اخترنا هدفين شائعين. عدّل الرقم أو المدة إن أردت؛ سنتابعها في لوحة التحكم.</p>
+          <div className="setup-goal-grid">{generalList.map((o) => {
             const on = general[o.id];
             return <div key={o.id} className={cn("setup-goal", on && "is-on")}>
               <button type="button" className="setup-goal-toggle" aria-pressed={Boolean(on)} onClick={() => setGeneral((g) => { const n = { ...g }; if (n[o.id]) delete n[o.id]; else n[o.id] = { target: o.defaultTarget, horizon: "3m" }; return n; })}>
@@ -89,7 +106,7 @@ function Setup() {
             </div>;
           })}</div>
         </section>}
-        {step === 1 && <section className="welcome-centered">
+        {!single && step === 1 && <section className="welcome-centered">
           <span className="welcome-eyebrow">فريقك</span>
           <h1 className="welcome-title">من يعمل معك من البداية؟</h1>
           <p className="welcome-lead">الفريق كاملًا مختار. أزل من لا تحتاجه الآن؛ يمكنك إضافته لاحقًا.</p>
@@ -125,9 +142,9 @@ function Setup() {
       </div>
       <footer className="welcome-footer">
         <Button type="button" variant="ghost" disabled={step === 0} onClick={() => setStep((s) => Math.max(0, s - 1))} className="welcome-back"><ArrowRight /> السابق</Button>
-        {step >= 1 && !last ? <Button type="button" variant="link" onClick={() => void finish()} disabled={saving || !workspace}>احفظ بالإجابات الافتراضية</Button> : <span className="welcome-footer-spacer" />}
-        {last ? <Button type="button" className="welcome-next" disabled={saving || !workspace} onClick={() => void finish()}>{saving ? "جارٍ الحفظ…" : "احفظ الأهداف وابدأ"} <ArrowLeft /></Button>
-          : <Button type="button" className="welcome-next" disabled={step === 0 && !Object.keys(general).length || step === 1 && !chosen.length} onClick={() => setStep((s) => s + 1)}>التالي <ArrowLeft /></Button>}
+        {!single && step >= 1 && !last ? <Button type="button" variant="link" onClick={() => void finish()} disabled={saving || !workspace}>احفظ بالإجابات الافتراضية</Button> : <span className="welcome-footer-spacer" />}
+        {last ? <Button type="button" className="welcome-next" disabled={saving || !workspace} onClick={() => void finish()}>{saving ? "جارٍ الحفظ…" : single ? `احفظ وابدأ مع ${member?.name ?? ""}` : "احفظ الأهداف وابدأ"} <ArrowLeft /></Button>
+          : <Button type="button" className="welcome-next" disabled={!single && (step === 0 && !Object.keys(general).length || step === 1 && !chosen.length)} onClick={() => setStep((s) => s + 1)}>التالي <ArrowLeft /></Button>}
       </footer>
     </main>
   </div>;

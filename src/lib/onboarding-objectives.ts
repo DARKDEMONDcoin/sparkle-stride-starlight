@@ -225,7 +225,7 @@ export function objectivesPrompt(saved: unknown, employeeId?: string): string {
   const lines = rel.map((o) => `- ${String(o.title).slice(0, 80)}: ${String(o.target).slice(0, 12)} ${String(o.unit).slice(0, 40)} خلال ${horizonLabel[o.horizon as Horizon] ?? "3 أشهر"}`);
   const ans = employeeId && s.answers?.[employeeId] ? Object.entries(s.answers[employeeId]!).map(([k, v]) => {
     const q = employeeSetups[employeeId]?.questions.find((x) => x.id === k);
-    return q ? `- ${q.q} ${String(v).slice(0, 40)}` : "";
+    return q ? `- [${areaLabel[q.area ?? employeeArea[employeeId] ?? "operations"]}] ${q.q} ${String(v).slice(0, 40)}` : "";
   }).filter(Boolean) : [];
   return ["أهداف المالك المسجلة (وجّه عملك نحوها ولا تدّعِ تقدمًا بلا بيانات):", ...lines, ...(ans.length ? ["إجابات التهيئة:", ...ans] : [])].join("\n");
 }
