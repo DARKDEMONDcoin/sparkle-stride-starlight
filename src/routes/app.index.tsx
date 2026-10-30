@@ -34,7 +34,7 @@ import { splitReview } from "@/lib/task-freshness";
 import { useQueryClient } from "@tanstack/react-query";
 import { boundWelcomeUser, clearWelcomeBinding, employeeIdFromName, readWelcomeDraft, type StarterAction, type WelcomeDraftData } from "@/lib/welcome-draft";
 import { fallbackRecommendation } from "@/lib/welcome-recommendation-fallback";
-import { horizonLabel, setupSkipKey, type SavedOnboarding } from "@/lib/onboarding-objectives";
+import { areaLabel, employeeSetups, horizonLabel, learnedByArea, setupSkipKey, type Area, type SavedOnboarding } from "@/lib/onboarding-objectives";
 
 
 export const Route = createFileRoute("/app/")({
@@ -363,6 +363,79 @@ function ObjectivesCard({ onboarding, tasks }: { onboarding: SavedOnboarding | n
   );
 }
 
+/** الفريق: من أنهى جلسة تعريفه يفتح محادثته، ومن لم يُعيَّن بعد يظهر له زر «عيّن». */
+function HireTeamCard({ onboarding }: { onboarding: SavedOnboarding | null }) {
+  const hired = new Set(onboarding?.employees ?? []);
+  const members = team.filter((m) => employeeSetups[m.id]);
+  const ready = members.filter((m) => hired.has(m.id)).length;
+  return (
+    <section className="app-editorial-panel mb-4" aria-labelledby="hire-title">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 id="hire-title" className="font-display text-lg font-black">فريقك</h2>
+          <p className="text-sm text-muted-foreground">كل موظف يسألك أسئلة قصيرة عن مجاله قبل أن يبدأ.</p>
+        </div>
+        <span className="text-xs font-bold text-muted-foreground" dir="ltr">{ready} / {members.length}</span>
+      </div>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"><span className="block h-full bg-primary" style={{ width: `${(ready / members.length) * 100}%` }} /></div>
+      <ul className="hire-grid mt-3">
+        {members.map((m) => {
+          const on = hired.has(m.id);
+          return (
+            <li key={m.id} className={on ? "hire-card is-on" : "hire-card"}>
+              <Portrait memberId={m.id} name={m.name} className="size-12 rounded-xl" />
+              <strong className="text-sm">{m.name}</strong>
+              <span className="text-xs text-muted-foreground">{m.role}</span>
+              {on ? (
+                <Button asChild size="sm" variant="outline"><Link to="/app/chat/$id" params={{ id: employeeSlug(m.id) }}>محادثة</Link></Button>
+              ) : (
+                <Button asChild size="sm"><Link to="/app/setup" search={{ employee: m.id }}>عيّن {m.name}</Link></Button>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+/** ما تعلّمه الفريق من جلسات التعريف، مصنّفًا حسب مجال التسويق. */
+function LearnedPanel({ onboarding }: { onboarding: SavedOnboarding | null }) {
+  const facts = learnedByArea(onboarding);
+  const [area, setArea] = useState<Area | "all">("all");
+  if (!facts.length) return null;
+  const areas = [...new Set(facts.map((f) => f.area))];
+  const shown = area === "all" ? facts : facts.filter((f) => f.area === area);
+  return (
+    <section className="app-editorial-panel mb-4" aria-labelledby="learned-title">
+      <div className="flex items-center justify-between gap-2">
+        <h2 id="learned-title" className="font-display text-lg font-black">ما يعرفه فريقك عن مشروعك</h2>
+        <Link to="/app/brand" className="app-text-link">دماغ العلامة</Link>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2" role="tablist" aria-label="مجالات التسويق">
+        {(["all", ...areas] as const).map((a) => (
+          <button key={a} type="button" role="tab" aria-selected={area === a} onClick={() => setArea(a)} className={area === a ? "setup-chip is-on" : "setup-chip"}>
+            {a === "all" ? "الكل" : areaLabel[a]}
+          </button>
+        ))}
+      </div>
+      <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+        {shown.map((f) => {
+          const m = getMember(f.employeeId);
+          return (
+            <li key={`${f.employeeId}-${f.question}`} className="rounded-xl border border-border p-3">
+              <span className="text-xs font-bold text-primary">{areaLabel[f.area]}</span>
+              <p className="mt-1 text-sm text-muted-foreground">{f.question}</p>
+              <p className="text-sm font-bold">{f.answer}</p>
+              {m ? <p className="mt-1 text-xs text-muted-foreground">من جلسة {m.name}</p> : null}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
 function NameWorkspace({ workspace }: { workspace: { id: string; name: string; website?: string | null } }) {
   const key = `ziad-named-${workspace.id}`;
   const queryClient = useQueryClient();
@@ -467,6 +540,8 @@ function AppHome() {
       {workspace ? <NameWorkspace workspace={workspace as never} /> : null}
       <RequestBox />
       {workspace ? <ObjectivesCard onboarding={onboarding} tasks={list as never} /> : null}
+      {workspace ? <HireTeamCard onboarding={onboarding} /> : null}
+      {workspace ? <LearnedPanel onboarding={onboarding} /> : null}
       {workspace ? (
         <OnboardingChecklist
           workspaceId={workspace.id}
