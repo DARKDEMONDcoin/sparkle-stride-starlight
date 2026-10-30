@@ -1,3 +1,4 @@
+import { objectivesPrompt } from "@/lib/onboarding-objectives";
 import { memoryBlock, type MemoryItem } from "./memory.server";
 
 export const BRAND_EMPLOYEE_IDS = ["sonny", "eva", "sam", "nour", "dana", "adam"] as const;
@@ -47,7 +48,7 @@ export function buildBrandContext(
   const brain = workspace.profile && typeof workspace.profile === "object" ? (workspace.profile as Record<string, unknown>)["brandBrain"] : null;
   const profile =
     workspace.profile && typeof workspace.profile === "object"
-      ? sanitizeBrandKnowledge(JSON.stringify(Object.fromEntries(Object.entries(workspace.profile).filter(([key]) => key !== "brandBrain"))), 3_000)
+      ? sanitizeBrandKnowledge(JSON.stringify(Object.fromEntries(Object.entries(workspace.profile).filter(([key]) => key !== "brandBrain" && key !== "onboarding"))), 3_000)
       : "";
 
   return [
@@ -57,6 +58,7 @@ export function buildBrandContext(
     "«بداية بيانات العلامة»",
     brain ? `عقل العلامة المحدّث (حقول user مؤكدة من المالك، حقول ai تحتاج مراجعة؛ لا تستخدم suggestions قبل قبولها): ${sanitizeBrandKnowledge(JSON.stringify(Object.fromEntries(Object.entries(brain as Record<string, { data?: unknown; source?: string }>).map(([key, section]) => [key, { data: section.data, source: section.source }]))), 8000)}` : "",
     brain ? "لأعمال التصميم استخدم لوحة identity بأدوارها وخطوطها دون اختراع ألوان مفقودة. للمحتوى اتبع voice ولهجة الجمهور في المخرج المطلوب فقط؛ تبقى لغة المحادثة من رسالة المالك الأخيرة." : "",
+    workspace.profile && typeof workspace.profile === "object" ? objectivesPrompt((workspace.profile as Record<string, unknown>)["onboarding"]) : "",
     workspace.name ? `الاسم: ${sanitizeBrandKnowledge(workspace.name, 120)}` : "",
     workspace.industry ? `المجال: ${sanitizeBrandKnowledge(workspace.industry, 120)}` : "",
     workspace.country ? `السوق: ${sanitizeBrandKnowledge(workspace.country, 80)}` : "",

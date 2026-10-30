@@ -190,7 +190,7 @@ export function Nav({ variant = "over" }: { variant?: "over" | "solid" }) {
                 <div className="sahl-workers-heading">
                   <span>
                     <b>موظفو زياد</b>
-                    <small>ستة تخصصات تعمل معًا كفريق واحد</small>
+                    <small>سبعة تخصصات تعمل معًا كفريق واحد</small>
                   </span>
                   <Link to="/employees" onClick={() => setActive(null)}>كل الفريق ←</Link>
                 </div>

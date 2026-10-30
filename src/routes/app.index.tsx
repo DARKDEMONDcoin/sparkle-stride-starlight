@@ -34,6 +34,8 @@ import { splitReview } from "@/lib/task-freshness";
 import { useQueryClient } from "@tanstack/react-query";
 import { boundWelcomeUser, clearWelcomeBinding, employeeIdFromName, readWelcomeDraft, type StarterAction, type WelcomeDraftData } from "@/lib/welcome-draft";
 import { fallbackRecommendation } from "@/lib/welcome-recommendation-fallback";
+import { horizonLabel, setupSkipKey, type SavedOnboarding } from "@/lib/onboarding-objectives";
+
 
 export const Route = createFileRoute("/app/")({
   head: () => ({
@@ -308,6 +310,59 @@ function OnboardingChecklist({ workspaceId, hasWebsite, connected, requested, re
   );
 }
 
+
+const sourceLabel: Record<string, string> = { ga4: "Google Analytics", gsc: "Search Console", ads: "حساب الإعلانات", social: "حسابات التواصل", manual: "تحديثك اليدوي", tasks: "مهام الفريق" };
+
+/** أهداف التهيئة: القيمة الحالية تُعرض فقط حين تقيسها بيانات فعلية (مهام منجزة هذا الشهر)، وإلا يظهر مصدر القياس المطلوب. */
+function ObjectivesCard({ onboarding, tasks }: { onboarding: SavedOnboarding | null; tasks: { employee_id: string; status: string; created_at: string }[] }) {
+  if (!onboarding?.objectives?.length) {
+    return (
+      <section className="app-editorial-panel mb-4 flex flex-wrap items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="app-editorial-kicker">أهدافك</p>
+          <h2 className="mt-1 font-display text-lg font-black">حدد ما يتابعه فريقك</h2>
+          <p className="text-sm text-muted-foreground">أسئلة قصيرة بإجابات جاهزة، دقيقة واحدة.</p>
+        </div>
+        <Button asChild><Link to="/app/setup">ابدأ</Link></Button>
+      </section>
+    );
+  }
+  const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
+  const doneThisMonth = (emp: string) => tasks.filter((t) => t.status === "done" && (emp === "general" || t.employee_id === emp) && new Date(t.created_at) >= monthStart).length;
+  return (
+    <section className="app-editorial-panel mb-4" aria-labelledby="objectives-title">
+      <div className="flex items-center justify-between gap-2">
+        <h2 id="objectives-title" className="font-display text-lg font-black">أهدافك التي يتابعها الفريق</h2>
+        <Link to="/app/setup" className="app-text-link">تعديل</Link>
+      </div>
+      <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+        {onboarding.objectives.map((o) => {
+          const m = o.owner === "general" ? null : getMember(o.owner);
+          const current = o.source === "tasks" ? doneThisMonth(o.owner) : null;
+          const target = Number(o.target);
+          return (
+            <li key={`${o.owner}-${o.id}`} className="rounded-xl border border-border p-3">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                {m ? <span className="size-5 overflow-hidden rounded-md"><Portrait memberId={m.id} name={m.name} className="size-full" /></span> : <Sparkles className="size-3.5 text-primary" />}
+                {m?.name ?? "هدف عام"} · خلال {horizonLabel[o.horizon]}
+              </div>
+              <p className="mt-1 text-sm font-bold">{o.title}: {o.target} {o.unit}</p>
+              {current !== null ? (
+                <>
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"><span className="block h-full bg-primary" style={{ width: `${Math.min(100, target > 0 ? (current / target) * 100 : 0)}%` }} /></div>
+                  <p className="mt-1 text-xs text-muted-foreground">{current} هذا الشهر</p>
+                </>
+              ) : (
+                <p className="mt-1 text-xs text-muted-foreground">يُقاس من: {sourceLabel[o.source] ?? o.source} — لا قيمة حالية قبل توفر البيانات</p>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
 function NameWorkspace({ workspace }: { workspace: { id: string; name: string; website?: string | null } }) {
   const key = `ziad-named-${workspace.id}`;
   const queryClient = useQueryClient();
@@ -373,6 +428,15 @@ function AppHome() {
   const connected = (integrations ?? []).filter((i) => i.status === "connected").length;
   const broken = (integrations ?? []).filter((i) => i.status === "error");
   const started = list.length > 0;
+  const onboarding = ((workspace?.profile as { onboarding?: SavedOnboarding } | null)?.onboarding ?? null);
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!workspace || onboarding || isLoading || started) return;
+    try { if (localStorage.getItem(setupSkipKey(workspace.id))) return; } catch { return; }
+    void supabase.auth.getUser().then(({ data }) => {
+      if (data.user && boundWelcomeUser() === data.user.id) void navigate({ to: "/app/setup" });
+    });
+  }, [workspace?.id, Boolean(onboarding), isLoading, started]);
 
   // أرقام صفرية لا تُعرض: لوحة نظيفة تعرض ما حدث فعلًا فقط.
   const kpis = [
@@ -402,6 +466,7 @@ function AppHome() {
 
       {workspace ? <NameWorkspace workspace={workspace as never} /> : null}
       <RequestBox />
+      {workspace ? <ObjectivesCard onboarding={onboarding} tasks={list as never} /> : null}
       {workspace ? (
         <OnboardingChecklist
           workspaceId={workspace.id}
